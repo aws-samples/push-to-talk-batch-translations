@@ -43,6 +43,10 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "@aws-sdk/client-polly": "^3.290.0",
+    "@aws-sdk/client-s3": "^3.290.0",
+    "@aws-sdk/client-transcribe": "^3.290.0",
+    "@aws-sdk/client-translate": "^3.290.0",
     "aws-cdk-lib": "^2.1.0",
     "constructs": "^10.0.5"
   },
