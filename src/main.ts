@@ -1,9 +1,13 @@
-import { App, Duration, Stack, StackProps } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
+import path from 'path';
+import { App, CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
-import { cdk } from 'projen';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-cognito';
+import { ArnPrincipal, Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Construct } from 'constructs';
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -25,31 +29,37 @@ export class MyStack extends Stack {
     });
 
     // S3 Bucket Policy
-    const bucketPolicy = new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
+    const bucketPolicy = new PolicyStatement({
+      effect: Effect.ALLOW,
       actions: ['s3:GetObject'],
-      resources: [`${voiceTranslatorbucketArn}/*`],
-      principals: [new iam.ArnPrincipal('*')],
+      resources: [`${voiceTranslatorBucket.bucketArn}/*`],
+      principals: [new ArnPrincipal('*')],
     });
 
-    voiceTranslatoraddToResourcePolicy(bucketPolicy);
+    voiceTranslatorBucket.addToResourcePolicy(bucketPolicy);
 
     // Lambda
-    const voiceTranslatorLambdaRole = new iam.Role(this, 'VoiceTranslatorLambdaRole', {
-      assumedBy: new iam.ServicePrincipal('amazonaws.com'),
+    const voiceTranslatorLambdaRole = new Role(this, 'VoiceTranslatorLambdaRole', {
+      assumedBy: new ServicePrincipal('amazonaws.com'),
       inlinePolicies: {
         // Add policies here
       },
     });
 
-    const voiceTranslatorLambda = new Function(this, 'VoiceTranslatorLambda', {
-      handler: 'app.babelfish.LambdaHandler::handleRequest',
-      runtime: Runtime.JAVA_8,
-      role: voiceTranslatorLambdaRole,
-      code: fromBucket(fromBucketAttributes(this, 'MyBucket', { bucketName: 'tomash-us-east-1' }), 'voice-translator/lambda/voice-translator-jar'),
-      memorySize: 1024,
-      timeout: Duration.seconds(30),
-    });
+    const voiceTranslatorLambda = new NodejsFunction(this,
+      'VoiceTranslatorLambda', {
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/babelFsish.ts'),
+        role: voiceTranslatorLambdaRole,
+        runtime: Runtime.NODEJS_18_X,
+        architecture: Architecture.ARM_64,
+        memorySize: 1024,
+        timeout: Duration.seconds(30),
+        bundling: {
+          minify: true,
+          externalModules: ['aws-sdk'],
+        },
+      });
 
     // CloudFront
     const cfDistribution = new Distribution(this, 'CfDistribution', {
@@ -60,8 +70,119 @@ export class MyStack extends Stack {
       },
       defaultRootObject: 'index.html',
       httpVersion: HttpVersion.HTTP1_1,
-      ipv6Enabled: false,
+      enableIpv6: false,
       priceClass: PriceClass.PRICE_CLASS_ALL,
+    });
+
+
+    // Lambda Role
+    const lambdaRole = new Role(this, 'VoiceTranslatorLambdaRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      inlinePolicies: {
+        TranscribeAccess: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['transcribe:StartStreamTranscription'],
+              effect: Effect.ALLOW,
+              resources: ['*'],
+            }),
+          ],
+        }),
+        CloudWatchPolicy: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
+              effect: Effect.ALLOW,
+              resources: ['arn:aws:logs:*:*:*'],
+            }),
+          ],
+        }),
+        TranslateAccess: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['translate:TranslateText'],
+              effect: Effect.ALLOW,
+              resources: ['*'],
+            }),
+          ],
+        }),
+        PollyAccess: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['polly:SynthesizeSpeech'],
+              effect: Effect.ALLOW,
+              resources: ['*'],
+            }),
+          ],
+        }),
+      },
+    });
+
+    // Add S3Access policy to Lambda Role
+    lambdaRole.addToPolicy(
+      new PolicyStatement({
+        actions: ['s3:GetObject', 's3:PutObject', 's3:PutObjectAcl'],
+        effect: Effect.ALLOW,
+        resources: [`${voiceTranslatorBucket.bucketArn}/*`],
+      }),
+    );
+
+    // Add S3LocationAccess policy to Lambda Role
+    lambdaRole.addToPolicy(
+      new PolicyStatement({
+        actions: ['s3:GetBucketLocation'],
+        effect: Effect.ALLOW,
+        resources: ['arn:aws:s3:::*'],
+      }),
+    );
+
+    // Cognito Identity Pool
+    const identityPool = new CfnIdentityPool(this, 'CognitoIdentityPool', {
+      allowUnauthenticatedIdentities: true,
+    });
+
+    const unAuthRole = new Role(this, 'CognitoUnAuthorizedRole', {
+      assumedBy: new FederatedPrincipal('cognito-identity.amazonaws.com', {}, 'sts:AssumeRoleWithWebIdentity'),
+      inlinePolicies: {
+        CognitoUnauthorizedPolicy: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['lambda:InvokeFunction'],
+              effect: Effect.ALLOW,
+              resources: [voiceTranslatorLambda.functionArn],
+            }),
+            new PolicyStatement({
+              actions: ['s3:PutObject'],
+              effect: Effect.ALLOW,
+              resources: [`${voiceTranslatorBucket.bucketArn}/*`],
+            }),
+          ],
+        }),
+      },
+    });
+
+    // Identity Pool Role Mapping
+    new CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleMapping', {
+      identityPoolId: identityPool.ref,
+      roles: {
+        unauthenticated: unAuthRole.roleArn,
+      },
+    });
+
+    // Outputs
+    new CfnOutput(this, 'VoiceTranslatorBucketOutput', {
+      description: 'VoiceTranslator S3 Bucket',
+      value: voiceTranslatorBucket.bucketName,
+    });
+
+    new CfnOutput(this, 'IdentityPoolIdOutput', {
+      description: 'IdentityPoolId',
+      value: identityPool.ref,
+    });
+
+    new CfnOutput(this, 'VoiceTranslatorLambdaOutput', {
+      description: 'VoiceTranslator Lambda',
+      value: voiceTranslatorLambda.functionArn,
     });
 
   }
