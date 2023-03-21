@@ -1,21 +1,24 @@
 import path from 'path';
 import { App, CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnApiKey, CfnGraphQLApi, CfnGraphQLSchema, CfnResolver } from 'aws-cdk-lib/aws-appsync';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-cognito';
-import { ArnPrincipal, Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
+import { Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Choice, Condition, Fail, StateMachine, Wait, WaitTime } from 'aws-cdk-lib/aws-stepfunctions';
+import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
-
     const voiceTranslatorBucket = new Bucket(this, 'VoiceTranslatorBucket', {
-      publicReadAccess: true,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       websiteIndexDocument: 'voice-translator.html',
       cors: [
         {
@@ -28,38 +31,31 @@ export class MyStack extends Stack {
       ],
     });
 
-    // S3 Bucket Policy
-    const bucketPolicy = new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: ['s3:GetObject'],
-      resources: [`${voiceTranslatorBucket.bucketArn}/*`],
-      principals: [new ArnPrincipal('*')],
-    });
-
-    voiceTranslatorBucket.addToResourcePolicy(bucketPolicy);
-
-    // Lambda
-    const voiceTranslatorLambdaRole = new Role(this, 'VoiceTranslatorLambdaRole', {
-      assumedBy: new ServicePrincipal('amazonaws.com'),
-      inlinePolicies: {
-        // Add policies here
+    const appSync2EventBridgeGraphQLApi = new CfnGraphQLApi(
+      this,
+      'AppSync2EventBridgeApi',
+      {
+        name: 'AppSync2StepFunction-API',
+        authenticationType: 'API_KEY',
       },
+    );
+    new CfnApiKey(this, 'AppSync2StepFunctionApiKey', {
+      apiId: appSync2EventBridgeGraphQLApi.attrApiId,
     });
 
-    const voiceTranslatorLambda = new NodejsFunction(this,
-      'VoiceTranslatorLambda', {
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/babelFsish.ts'),
-        role: voiceTranslatorLambdaRole,
-        runtime: Runtime.NODEJS_18_X,
-        architecture: Architecture.ARM_64,
-        memorySize: 1024,
-        timeout: Duration.seconds(30),
-        bundling: {
-          minify: true,
-          externalModules: ['aws-sdk'],
-        },
-      });
+    const apiSchema = new CfnGraphQLSchema(this, 'TranslateSchema', {
+      apiId: appSync2EventBridgeGraphQLApi.attrApiId,
+      definition: `type Event {
+        result: String
+      }
+      type Mutation {
+        putEvent(event: String!): Event
+      }
+      schema {
+        query: Query
+        mutation: Mutation
+      }`,
+    });
 
     // CloudFront
     const cfDistribution = new Distribution(this, 'CfDistribution', {
@@ -67,42 +63,70 @@ export class MyStack extends Stack {
         origin: new S3Origin(voiceTranslatorBucket),
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachedMethods: AllowedMethods.ALLOW_GET_HEAD,
+        compress: false,
       },
       defaultRootObject: 'index.html',
       httpVersion: HttpVersion.HTTP1_1,
       enableIpv6: false,
+      enabled: true,
       priceClass: PriceClass.PRICE_CLASS_ALL,
     });
 
+    const cloudwatchPolicy = new PolicyDocument({
+      statements: [
+        new PolicyStatement({
+          actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
+          effect: Effect.ALLOW,
+          resources: ['arn:aws:logs:*:*:*'],
+        }),
+      ],
+    });
 
     // Lambda Role
-    const lambdaRole = new Role(this, 'VoiceTranslatorLambdaRole', {
+    const transcribeLambdaRole = new Role(this, 'VoiceTranslatorLambdaRole', {
       assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
       inlinePolicies: {
         TranscribeAccess: new PolicyDocument({
           statements: [
             new PolicyStatement({
-              actions: ['transcribe:StartStreamTranscription'],
+              actions: ['transcribe:StartStreamTranscription', 'transcribe:StartTranscriptionJob'],
               effect: Effect.ALLOW,
               resources: ['*'],
             }),
           ],
         }),
-        CloudWatchPolicy: new PolicyDocument({
-          statements: [
-            new PolicyStatement({
-              actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-              effect: Effect.ALLOW,
-              resources: ['arn:aws:logs:*:*:*'],
-            }),
-          ],
-        }),
+        CloudWatchPolicy: cloudwatchPolicy,
+      },
+    });
+
+    const translatePollyLambdaRole = new Role(this, 'TranslatePollyLambdaRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      inlinePolicies: {
         TranslateAccess: new PolicyDocument({
           statements: [
             new PolicyStatement({
               actions: ['translate:TranslateText'],
               effect: Effect.ALLOW,
               resources: ['*'],
+            }),
+          ],
+        }),
+        S3Access: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['s3:GetObject', 's3:PutObject', 's3:PutObjectAcl'],
+              effect: Effect.ALLOW,
+              resources: [`${voiceTranslatorBucket.bucketArn}/*`],
+            }),
+          ],
+        }),
+        BucketLocation: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['s3:GetBucketLocation'],
+              effect: Effect.ALLOW,
+              resources: ['arn:aws:s3:::*'],
             }),
           ],
         }),
@@ -115,26 +139,108 @@ export class MyStack extends Stack {
             }),
           ],
         }),
+        CloudWatchPolicy: cloudwatchPolicy,
       },
     });
 
-    // Add S3Access policy to Lambda Role
-    lambdaRole.addToPolicy(
-      new PolicyStatement({
-        actions: ['s3:GetObject', 's3:PutObject', 's3:PutObjectAcl'],
-        effect: Effect.ALLOW,
-        resources: [`${voiceTranslatorBucket.bucketArn}/*`],
-      }),
-    );
+    const getTranscribeStatusRole = new Role(this, 'VoiceTranslatorLambdaRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      inlinePolicies: {
+        TranscribeAccess: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['transcribe:GetTranscriptionJob'],
+              effect: Effect.ALLOW,
+              resources: ['*'],
+            }),
+          ],
+        }),
+      },
+    });
 
-    // Add S3LocationAccess policy to Lambda Role
-    lambdaRole.addToPolicy(
-      new PolicyStatement({
-        actions: ['s3:GetBucketLocation'],
-        effect: Effect.ALLOW,
-        resources: ['arn:aws:s3:::*'],
-      }),
-    );
+    const transcribeLambda = new NodejsFunction(this,
+      'VoiceTranslatorLambda', {
+        handler: 'handler',
+        entry: path.join(__dirname, 'lambda', 'transcribeJob.ts'),
+        role: transcribeLambdaRole,
+        runtime: Runtime.NODEJS_18_X,
+        architecture: Architecture.ARM_64,
+        memorySize: 1024,
+        timeout: Duration.seconds(30),
+        bundling: {
+          minify: true,
+          externalModules: ['aws-sdk'],
+        },
+      });
+
+    const getTranscribeStatusLambda = new NodejsFunction(this,
+      'getTranscribeStatusLambda', {
+        handler: 'handler',
+        entry: path.join(__dirname, 'lambda', 'transcribeJob.ts'),
+        role: getTranscribeStatusRole,
+        runtime: Runtime.NODEJS_18_X,
+        architecture: Architecture.ARM_64,
+        memorySize: 128,
+        timeout: Duration.seconds(30),
+        bundling: {
+          minify: true,
+          externalModules: ['aws-sdk'],
+        },
+      });
+
+    const translatePollyLambda = new NodejsFunction(this,
+      'translatePollyLambda', {
+        handler: 'handler',
+        entry: path.join(__dirname, 'lambda', 'translatePollyJob.ts'),
+        role: translatePollyLambdaRole,
+        runtime: Runtime.NODEJS_18_X,
+        architecture: Architecture.ARM_64,
+        memorySize: 128,
+        timeout: Duration.seconds(30),
+        bundling: {
+          minify: true,
+          externalModules: ['aws-sdk'],
+        },
+      });
+
+    const waitX = new Wait(this, 'Wait X Seconds', {
+      time: WaitTime.secondsPath('$.waitSeconds'),
+    });
+
+    const transcribeJob = new LambdaInvoke(this, 'transcribeLambda', {
+      lambdaFunction: transcribeLambda,
+      outputPath: '$.Payload',
+    });
+
+    const getTranscribeStatus = new LambdaInvoke(this, 'Get Transcribe Job Status', {
+      lambdaFunction: getTranscribeStatusLambda,
+      inputPath: '$.guid',
+      outputPath: '$.Payload',
+    });
+
+    const translatePollyJob = new LambdaInvoke(this, 'Start Translate / Polly Job Status', {
+      lambdaFunction: translatePollyLambda,
+      inputPath: '$.guid',
+      outputPath: '$.Payload',
+    });
+
+    const jobFailed = new Fail(this, 'Job Failed', {
+      cause: 'AWS Transcription Job Failed',
+      error: 'Transcription returned FAILED',
+    });
+
+    const jobComplete = (new Choice(this, 'Job Complete?')
+      .when(Condition.stringEquals('$.status', 'FAILED'), jobFailed)
+      .when(Condition.stringEquals('$.status', 'SUCCEEDED'), translatePollyJob)
+      .otherwise(waitX));
+
+    const TranscribeTranslatePollyDefinition = transcribeJob.next(getTranscribeStatus).next(jobComplete);
+
+    // create step function to handle the workflow
+    new StateMachine(this, 'StepFunction', {
+      definition: TranscribeTranslatePollyDefinition,
+      timeout: Duration.minutes(5),
+    });
 
     // Cognito Identity Pool
     const identityPool = new CfnIdentityPool(this, 'CognitoIdentityPool', {
@@ -149,7 +255,7 @@ export class MyStack extends Stack {
             new PolicyStatement({
               actions: ['lambda:InvokeFunction'],
               effect: Effect.ALLOW,
-              resources: [voiceTranslatorLambda.functionArn],
+              resources: [transcribeLambda.functionArn],
             }),
             new PolicyStatement({
               actions: ['s3:PutObject'],
@@ -161,6 +267,50 @@ export class MyStack extends Stack {
       },
     });
 
+    const putEventResolver = new CfnResolver(this, 'PutEventMutationResolver', {
+      apiId: appSync2EventBridgeGraphQLApi.attrApiId,
+      typeName: 'Mutation',
+      fieldName: 'putEvent',
+      dataSourceName: dataSource.name,
+      requestMappingTemplate: `{
+        "version": "2018-05-29",
+        "method": "POST",
+        "resourcePath": "/",
+        "params": {
+          "headers": {
+            "content-type": "application/x-amz-json-1.1",
+            "x-amz-target":"AWSEvents.PutEvents"
+          },
+          "body": {
+            "Entries":[
+              {
+                "Source":"appsync",
+                "EventBusName": "default",
+                "Detail":"{ \\\"event\\\": \\\"$ctx.arguments.event\\\"}",
+                "DetailType":"Event Bridge via GraphQL"
+               }
+            ]
+          }
+        }
+      }`,
+      responseMappingTemplate: `## Raise a GraphQL field error in case of a datasource invocation error
+      #if($ctx.error)
+        $util.error($ctx.error.message, $ctx.error.type)
+      #end
+      ## if the response status code is not 200, then return an error. Else return the body **
+      #if($ctx.result.statusCode == 200)
+          ## If response is 200, return the body.
+          {
+            "result": "$util.parseJson($ctx.result.body)"
+          }
+      #else
+          ## If response is not 200, append the response to error block.
+          $utils.appendError($ctx.result.body, $ctx.result.statusCode)
+      #end`,
+    });
+
+    // appSync2EventBridgeGraphQLApi.
+
     // Identity Pool Role Mapping
     new CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleMapping', {
       identityPoolId: identityPool.ref,
@@ -170,6 +320,11 @@ export class MyStack extends Stack {
     });
 
     // Outputs
+    new CfnOutput(this, 'CfnDistribution', {
+      description: 'Domain name for our cloud front distribution',
+      value: `https://${cfDistribution.distributionDomainName}/voice-translator.html`,
+    });
+
     new CfnOutput(this, 'VoiceTranslatorBucketOutput', {
       description: 'VoiceTranslator S3 Bucket',
       value: voiceTranslatorBucket.bucketName,
@@ -182,9 +337,8 @@ export class MyStack extends Stack {
 
     new CfnOutput(this, 'VoiceTranslatorLambdaOutput', {
       description: 'VoiceTranslator Lambda',
-      value: voiceTranslatorLambda.functionArn,
+      value: transcribeLambda.functionArn,
     });
-
   }
 }
 

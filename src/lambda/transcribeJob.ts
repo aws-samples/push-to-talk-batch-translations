@@ -25,8 +25,8 @@ async function transcribe(
 ): Promise<string> {
   const languageCode: LanguageCode = getLanguageCode(sourceLanguage);
 
-  // Build s3 path from bucket and key
-  const s3Path = `s3://${bucket}/${key}`;
+  // Build s3 path (s3://DOC-EXAMPLE-BUCKET/media-files/my-media-file.flac)
+  const s3Path = `s3://${bucket}/${key}.mp3`;
 
   try {
     const transcription: StartTranscriptionJobCommandOutput = await transcribeClient.send(
@@ -37,9 +37,10 @@ async function transcribe(
         Media: {
           MediaFileUri: s3Path,
         },
-        MediaSampleRateHertz: 16000,
       }),
     );
+    console.log(s3Path, 's3Path');
+    console.log(transcription, 'transcription');
     const transcriptFileUri = transcription.TranscriptionJob?.Transcript?.TranscriptFileUri;
     // transcription.TranscriptionJob.Results[0].Alternatives[0].Transcript;'
 
@@ -204,7 +205,7 @@ export const handler = async (input: Input) => {
   async function saveOnS3(bucket: string, outputFile: string): Promise<string> {
     const putObjectCommand = new PutObjectCommand({
       Bucket: bucket,
-      Key: `output/${Date.now()}.mp3`,
+      Key: `output/${outputFile}.mp3`,
       Body: createReadStream(outputFile),
       ACL: 'public-read',
     });
