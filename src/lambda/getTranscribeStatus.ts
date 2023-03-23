@@ -1,10 +1,7 @@
-import { GetTranscriptionJobCommand, TranscribeClient } from '@aws-sdk/client-transcribe';
+import { GetTranscriptionJobCommand, GetTranscriptionJobCommandOutput, TranscribeClient } from '@aws-sdk/client-transcribe';
+import { GetTranscribeStatusOutput, TranscribeOutput } from './types';
 
-interface Input {
-  jobId: string;
-}
-
-export const handler = async (input: Input) => {
+export const handler = async (input: TranscribeOutput): Promise<GetTranscribeStatusOutput> => {
   console.log(`Received event: ${JSON.stringify(input)}`);
   const jobId = input.jobId;
   try {
@@ -12,9 +9,14 @@ export const handler = async (input: Input) => {
     const command = new GetTranscriptionJobCommand({
       TranscriptionJobName: jobId,
     });
-    const response = await transcribeClient.send(command);
+    const response: GetTranscriptionJobCommandOutput = await transcribeClient.send(command);
     console.log(`Response: ${JSON.stringify(response)}`);
-    return response.TranscriptionJob?.TranscriptionJobStatus;
+
+    return {
+      ...input,
+      transcriptFileUri: response.TranscriptionJob?.Transcript?.TranscriptFileUri || '',
+      status: response.TranscriptionJob?.TranscriptionJobStatus || 'NOT_STARTED',
+    };
 
   } catch (e: any) {
     console.log(e);

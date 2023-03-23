@@ -1,15 +1,14 @@
 import path from 'path';
 import { App, CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
-import { CfnApiKey, CfnGraphQLApi, CfnGraphQLSchema, CfnResolver } from 'aws-cdk-lib/aws-appsync';
+// import { CfnApiKey, CfnGraphQLApi, CfnGraphQLSchema } from 'aws-cdk-lib/aws-appsync';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-cognito';
-import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
-import { Choice, Condition, Fail, StateMachine, Wait, WaitTime } from 'aws-cdk-lib/aws-stepfunctions';
+import { Choice, Condition, Fail, StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
 
@@ -31,36 +30,37 @@ export class MyStack extends Stack {
       ],
     });
 
-    const appSync2EventBridgeGraphQLApi = new CfnGraphQLApi(
-      this,
-      'AppSync2EventBridgeApi',
-      {
-        name: 'AppSync2StepFunction-API',
-        authenticationType: 'API_KEY',
-      },
-    );
-    new CfnApiKey(this, 'AppSync2StepFunctionApiKey', {
-      apiId: appSync2EventBridgeGraphQLApi.attrApiId,
-    });
+    // const appSync2EventBridgeGraphQLApi = new CfnGraphQLApi(
+    //   this,
+    //   'AppSync2EventBridgeApi',
+    //   {
+    //     name: 'AppSync2StepFunction-API',
+    //     authenticationType: 'API_KEY',
+    //   },
+    // );
+    // new CfnApiKey(this, 'AppSync2StepFunctionApiKey', {
+    //   apiId: appSync2EventBridgeGraphQLApi.attrApiId,
+    // });
+    //
+    // const apiSchema = new CfnGraphQLSchema(this, 'TranslateSchema', {
+    //   apiId: appSync2EventBridgeGraphQLApi.attrApiId,
+    //   definition: `
+    //   type Event {
+    //     result: String
+    //   }
+    //   type Mutation {
+    //     putEvent(event: String!): Event
+    //   }
+    //   type Subscription {
+    //         updatedEvent: Event
+    //         @aws_subscribe(mutations: ["putEvent"])
+    //   }
+    //   schema {
+    //     subscription: Subscription
+    //     mutation: Mutation
+    //   }`,
+    // });
 
-    const apiSchema = new CfnGraphQLSchema(this, 'TranslateSchema', {
-      apiId: appSync2EventBridgeGraphQLApi.attrApiId,
-      definition: `
-      type Event {
-        result: String
-      }
-      type Mutation {
-        putEvent(event: String!): Event
-      }
-      type Subscription {
-            updatedEvent: Event
-            @aws_subscribe(mutations: ["putEvent"])
-      }
-      schema {
-        subscription: Subscription
-        mutation: Mutation
-      }`,
-    });
 
     // CloudFront
     const cfDistribution = new Distribution(this, 'CfDistribution', {
@@ -98,6 +98,15 @@ export class MyStack extends Stack {
               actions: ['transcribe:StartStreamTranscription', 'transcribe:StartTranscriptionJob'],
               effect: Effect.ALLOW,
               resources: ['*'],
+            }),
+          ],
+        }),
+        S3Access: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['s3:GetObject', 's3:PutObject', 's3:PutObjectAcl'],
+              effect: Effect.ALLOW,
+              resources: [`${voiceTranslatorBucket.bucketArn}/*`],
             }),
           ],
         }),
@@ -148,7 +157,7 @@ export class MyStack extends Stack {
       },
     });
 
-    const getTranscribeStatusRole = new Role(this, 'VoiceTranslatorLambdaRole', {
+    const getTranscribeStatusRole = new Role(this, 'getTranscribeStatusRole', {
       assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
       inlinePolicies: {
         TranscribeAccess: new PolicyDocument({
@@ -160,6 +169,7 @@ export class MyStack extends Stack {
             }),
           ],
         }),
+        CloudWatchPolicy: cloudwatchPolicy,
       },
     });
 
@@ -181,7 +191,7 @@ export class MyStack extends Stack {
     const getTranscribeStatusLambda = new NodejsFunction(this,
       'getTranscribeStatusLambda', {
         handler: 'handler',
-        entry: path.join(__dirname, 'lambda', 'transcribeJob.ts'),
+        entry: path.join(__dirname, 'lambda', 'getTranscribeStatus.ts'),
         role: getTranscribeStatusRole,
         runtime: Runtime.NODEJS_18_X,
         architecture: Architecture.ARM_64,
@@ -208,24 +218,25 @@ export class MyStack extends Stack {
         },
       });
 
-    const waitX = new Wait(this, 'Wait X Seconds', {
-      time: WaitTime.secondsPath('$.waitSeconds'),
-    });
+    // const waitX = new Wait(this, 'Wait X Seconds', {
+    //   time: WaitTime.secondsPath('$.waitSeconds'),
+    // });
 
     const transcribeJob = new LambdaInvoke(this, 'transcribeLambda', {
       lambdaFunction: transcribeLambda,
+      // inputPath: '$.guid',
       outputPath: '$.Payload',
     });
 
     const getTranscribeStatus = new LambdaInvoke(this, 'Get Transcribe Job Status', {
       lambdaFunction: getTranscribeStatusLambda,
-      inputPath: '$.guid',
+      // inputPath: '$.guid',
       outputPath: '$.Payload',
     });
 
     const translatePollyJob = new LambdaInvoke(this, 'Start Translate / Polly Job Status', {
       lambdaFunction: translatePollyLambda,
-      inputPath: '$.guid',
+      // inputPath: '$.guid',
       outputPath: '$.Payload',
     });
 
@@ -234,10 +245,19 @@ export class MyStack extends Stack {
       error: 'Transcription returned FAILED',
     });
 
+    const unknownState = new Fail(this, 'Job unknownState', {
+      cause: 'AWS Transcription Job Failed',
+      error: 'Transcription returned unknownState',
+    });
+
     const jobComplete = (new Choice(this, 'Job Complete?')
       .when(Condition.stringEquals('$.status', 'FAILED'), jobFailed)
-      .when(Condition.stringEquals('$.status', 'SUCCEEDED'), translatePollyJob)
-      .otherwise(waitX));
+      .when(Condition.stringEquals('$.status', 'COMPLETED'), translatePollyJob)
+      .when(Condition.stringEquals('$.status', 'IN_PROGRESS'), getTranscribeStatus)
+      .otherwise(unknownState));
+
+    // Write a step function that will loop until the status input is SUCCEEDED
+
 
     const TranscribeTranslatePollyDefinition = transcribeJob.next(getTranscribeStatus).next(jobComplete);
 
@@ -286,6 +306,11 @@ export class MyStack extends Stack {
       description: 'Domain name for our cloud front distribution',
       value: `https://${cfDistribution.distributionDomainName}/voice-translator.html`,
     });
+
+    // new CfnOutput(this, 'apiSchema', {
+    //   description: 'apiSchema.apiId: ',
+    //   value: `${apiSchema.apiId}`,
+    // });
 
     new CfnOutput(this, 'VoiceTranslatorBucketOutput', {
       description: 'VoiceTranslator S3 Bucket',

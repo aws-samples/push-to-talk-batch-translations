@@ -3,21 +3,13 @@ import { createReadStream } from 'fs';
 import { Readable } from 'stream';
 import { OutputFormat, PollyClient, SynthesizeSpeechCommand, SynthesizeSpeechCommandOutput, VoiceId } from '@aws-sdk/client-polly';
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { GetTranscriptionJobCommand, TranscribeClient } from '@aws-sdk/client-transcribe';
 import { TranslateClient, TranslateTextCommand, TranslateTextCommandOutput } from '@aws-sdk/client-translate';
-
-interface Input {
-  jobId: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  bucket: string;
-  key: string;
-}
+import { GetTranscribeStatusOutput } from './types';
 
 const s3 = new S3Client({ region: process.env.REGION || 'us-east-1' });
 const translateClient = new TranslateClient({ region: process.env.REGION || 'us-east-1' });
 const polly = new PollyClient({ region: process.env.REGION || 'us-east-1' });
-const transcribeClient = new TranscribeClient({ region: process.env.REGION || 'us-east-1' });
+// const transcribeClient = new TranscribeClient({ region: process.env.REGION || 'us-east-1' });
 
 async function translateText(
   text: string,
@@ -125,29 +117,17 @@ async function saveOnS3(bucket: string, outputFile: string): Promise<string> {
   return fileName;
 }
 
-export const handler = async (input: Input) => {
-  console.log(`Bucket:${input.bucket}`);
-  console.log(`Key:${input.key}`);
-  console.log(`Source Language: ${input.sourceLanguage}`);
-  console.log(`Target: ${input.targetLanguage}`);
-
-  const command = new GetTranscriptionJobCommand({ TranscriptionJobName: input.jobId });
-  const transcriptResponse = await transcribeClient.send(command);
-
-  const s3TranscriptLocation = transcriptResponse.TranscriptionJob?.Transcript?.TranscriptFileUri || '';
-  if (s3TranscriptLocation === '') {
-    throw new Error('No transcript s3 found');
-  }
-  console.log(`Transcript S3: ${s3TranscriptLocation}`);
-
-  const s3UriParts = s3TranscriptLocation.split('/');
-
-  const s3GetCommand = new GetObjectCommand({
-    Bucket: s3UriParts[2],
-    Key: s3UriParts[3],
+export const handler = async (input: GetTranscribeStatusOutput) => {
+  // Make an api call to get the transcript from s3
+  const transcriptS3GetCommand = new GetObjectCommand({
+    Bucket: input.bucket,
+    Key: `transcripts/${input.jobId}`,
   });
-  const s3Response = s3.send(s3GetCommand);
-  const transcript = (await s3Response).Body?.toString() || '';
+  console.log(transcriptS3GetCommand, 'transcriptS3GetCommand');
+  const transcriptResponse = s3.send(transcriptS3GetCommand);
+  const transcript = (await transcriptResponse).Body?.toString() || '';
+
+  console.log(transcript, 'transcript');
 
   const translatedText = await translateText(
     transcript,
