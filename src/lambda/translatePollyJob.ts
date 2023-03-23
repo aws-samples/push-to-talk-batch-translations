@@ -1,15 +1,11 @@
-import * as fs from 'fs';
-import { createReadStream } from 'fs';
-import { Readable } from 'stream';
 import { OutputFormat, PollyClient, SynthesizeSpeechCommand, SynthesizeSpeechCommandOutput, VoiceId } from '@aws-sdk/client-polly';
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { TranslateClient, TranslateTextCommand, TranslateTextCommandOutput } from '@aws-sdk/client-translate';
 import { GetTranscribeStatusOutput } from './types';
 
 const s3 = new S3Client({ region: process.env.REGION || 'us-east-1' });
 const translateClient = new TranslateClient({ region: process.env.REGION || 'us-east-1' });
-const polly = new PollyClient({ region: process.env.REGION || 'us-east-1' });
-// const transcribeClient = new TranscribeClient({ region: process.env.REGION || 'us-east-1' });
+const pollyClient = new PollyClient({ region: process.env.REGION || 'us-east-1' });
 
 async function translateText(
   text: string,
@@ -34,14 +30,11 @@ async function translateText(
 
   const translatedTranscribedText: string = translateRequest.TranslatedText || '';
 
-  console.log('Translation: ' + translatedTranscribedText);
-
   return translatedTranscribedText;
 }
 
-async function synthesizePollySpeech (text: string, language: string) : Promise<string> {
+const handleVoiceId = (language: string): VoiceId => {
   let voiceId = VoiceId.Matthew;
-  const outputFileName = '/tmp/output.mp3';
 
   if (language === 'pl') {
     voiceId = VoiceId.Maja;
@@ -82,52 +75,68 @@ async function synthesizePollySpeech (text: string, language: string) : Promise<
   if (language === 'ca') {
     voiceId = VoiceId.Chantal;
   }
+  return voiceId;
+};
+
+async function synthesizePollySpeech (text: string, language: string, key: string, bucket: string) : Promise<{ FileName: string }> {
+  const voiceId = handleVoiceId(language);
+
+  console.log(`Input language: ${language}`);
+
   const synthesizeSpeechRequest = new SynthesizeSpeechCommand({
     OutputFormat: OutputFormat.MP3,
     VoiceId: voiceId,
     Text: text,
+    TextType: 'text',
+    LanguageCode: language,
   });
 
   try {
-    const synthesizeSpeechResult: SynthesizeSpeechCommandOutput = await polly.send(synthesizeSpeechRequest);
-    const outputStream = fs.createWriteStream(outputFileName);
-    const inputStream = synthesizeSpeechResult;
+    const synthesizeSpeechResult: SynthesizeSpeechCommandOutput = await pollyClient.send(synthesizeSpeechRequest);
+    console.log('synthesizeSpeechResult', synthesizeSpeechResult);
 
-    if (inputStream.AudioStream instanceof Readable) {
-      inputStream.AudioStream.pipe(outputStream);
-      inputStream.AudioStream.on('end', () => {
-        outputStream.close();
-      });
-    }
+    // @ts-ignore
+    const response = new Response(synthesizeSpeechResult.AudioStream as ReadableStream);
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    const s3Response = await s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: `voice/${key}.mp3`,
+        Body: arrayBuffer as any,
+        ContentEncoding: 'base64',
+        Metadata: {
+          'Content-Type': 'audio/mpeg',
+        },
+      }),
+    );
+    console.log('s3Response Success', s3Response);
+
   } catch (e: any) {
     console.error(e.toString());
   }
-  return outputFileName;
+  return { FileName: `voice/${key}.mp3` };
 }
 
-async function saveOnS3(bucket: string, outputFile: string): Promise<string> {
-  const fileName = `output/${outputFile}.mp3`;
-  const putObjectCommand = new PutObjectCommand({
+async function getTranscriptFile(bucket: string, key: string): Promise<string> {
+  const transcriptS3GetCommand = new GetObjectCommand({
     Bucket: bucket,
-    Key: fileName,
-    Body: createReadStream(outputFile),
+    Key: `transcription/${key}.json`,
   });
+  const transcriptResponse: GetObjectCommandOutput = await s3.send(transcriptS3GetCommand);
 
-  await s3.send(putObjectCommand);
-  return fileName;
+  const transcriptRaw = await transcriptResponse?.Body?.transformToString('utf-8') || '';
+
+  const transcript = JSON.parse(transcriptRaw)?.results.transcripts[0].transcript;
+  console.log('transcript', JSON.stringify(transcript));
+  return transcript;
 }
 
 export const handler = async (input: GetTranscribeStatusOutput) => {
-  // Make an api call to get the transcript from s3
-  const transcriptS3GetCommand = new GetObjectCommand({
-    Bucket: input.bucket,
-    Key: `transcripts/${input.jobId}`,
-  });
-  console.log(transcriptS3GetCommand, 'transcriptS3GetCommand');
-  const transcriptResponse = s3.send(transcriptS3GetCommand);
-  const transcript = (await transcriptResponse).Body?.toString() || '';
+  const escapedKey = input.key.replace(/ /g, '_');
 
-  console.log(transcript, 'transcript');
+  const transcript = await getTranscriptFile(input.bucket, escapedKey);
 
   const translatedText = await translateText(
     transcript,
@@ -135,8 +144,14 @@ export const handler = async (input: GetTranscribeStatusOutput) => {
     input.targetLanguage,
   );
 
-  const outputPollyFile = await synthesizePollySpeech(translatedText, input.targetLanguage);
+  console.log(`translatedText: ${JSON.stringify(translatedText)}`);
 
-  return saveOnS3(input.bucket, outputPollyFile);
+  const outputPollyFile = await synthesizePollySpeech(translatedText,
+    input.targetLanguage,
+    escapedKey,
+    input.bucket,
+  );
+  console.log('outputPollyFile ', outputPollyFile);
+  return outputPollyFile;
 };
 
