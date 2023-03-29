@@ -1,4 +1,10 @@
-import { LanguageCode, StartTranscriptionJobCommand, StartTranscriptionJobCommandOutput, TranscribeClient } from '@aws-sdk/client-transcribe';
+import {
+  LanguageCode,
+  MediaFormat,
+  StartTranscriptionJobCommand,
+  StartTranscriptionJobCommandOutput,
+  TranscribeClient,
+} from '@aws-sdk/client-transcribe';
 import { TranscribeInput, TranscribeOutput } from './types';
 
 
@@ -12,14 +18,14 @@ async function transcribe(
   const languageCode: LanguageCode = getLanguageCode(sourceLanguage);
 
   // Build s3 path (s3://DOC-EXAMPLE-BUCKET/media-files/my-media-file.flac)
-  const s3Path = `s3://${bucket}/${key}.mp3`;
+  const s3Path = `s3://${bucket}/${key}.wav`;
 
   try {
     const transcription: StartTranscriptionJobCommandOutput = await transcribeClient.send(
       new StartTranscriptionJobCommand({
         TranscriptionJobName: `transcription-${languageCode}-${Date.now()}`,
         LanguageCode: languageCode,
-        MediaFormat: 'mp3',
+        MediaFormat: MediaFormat.WAV,
         Media: {
           MediaFileUri: s3Path,
         },

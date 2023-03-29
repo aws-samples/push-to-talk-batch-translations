@@ -1,4 +1,5 @@
 import path from 'path';
+import { S3ToStepfunctions, S3ToStepfunctionsProps } from '@aws-solutions-constructs/aws-s3-stepfunctions';
 import { App, CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
 // import { CfnApiKey, CfnGraphQLApi, CfnGraphQLSchema } from 'aws-cdk-lib/aws-appsync';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
@@ -7,7 +8,8 @@ import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-
 import { Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, EventType, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { Choice, Condition, Fail, StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
@@ -262,10 +264,43 @@ export class MyStack extends Stack {
     const TranscribeTranslatePollyDefinition = transcribeJob.next(getTranscribeStatus).next(jobComplete);
 
     // create step function to handle the workflow
-    new StateMachine(this, 'StepFunction', {
+    const primaryStepFunction = new StateMachine(this, 'StepFunction', {
       definition: TranscribeTranslatePollyDefinition,
       timeout: Duration.minutes(5),
     });
+
+    const startSfnLambda = new NodejsFunction(this,
+      'startSfnLambda', {
+        handler: 'handler',
+        entry: path.join(__dirname, 'lambda', 'startSfnLambda.ts'),
+        role: transcribeLambdaRole,
+        runtime: Runtime.NODEJS_18_X,
+        architecture: Architecture.ARM_64,
+        memorySize: 128,
+        timeout: Duration.seconds(30),
+        bundling: {
+          minify: true,
+          externalModules: ['aws-sdk'],
+        },
+        environment: {
+          STATE_MACHINE_ARN: primaryStepFunction.stateMachineArn,
+        },
+      });
+
+    startSfnLambda.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['states:StartExecution'],
+        resources: [primaryStepFunction.stateMachineArn],
+        effect: Effect.ALLOW,
+      }),
+    );
+
+    voiceTranslatorBucket.addEventNotification(
+      EventType.OBJECT_CREATED_PUT,
+      new LambdaDestination(startSfnLambda),
+      { prefix: 'uploads/' },
+    );
+
 
     // Cognito Identity Pool
     const identityPool = new CfnIdentityPool(this, 'CognitoIdentityPool', {
