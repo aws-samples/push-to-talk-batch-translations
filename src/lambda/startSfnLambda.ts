@@ -1,15 +1,18 @@
 import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
-export const handler = async () => {
+import { AppsyncFunctionProps } from 'aws-cdk-lib/aws-appsync';
+export const handler = async (event: AppsyncFunctionProps) => {
   const client = new SFNClient({ region: process.env.REGION || 'us-east-1' });
-  // start stepfunction
+
+  console.log(event, 'EVENT');
   const startExecutionCommand = new StartExecutionCommand({
     stateMachineArn: process.env.STATE_MACHINE_ARN,
+    input: JSON.stringify(event),
   });
 
   try {
     const commandOutput = await client.send(startExecutionCommand);
 
-    console.log('CONTENT TYPE:', commandOutput);
+    console.log('CONTENT commandOutput:', commandOutput);
     return commandOutput;
   } catch (err) {
     console.log(err);

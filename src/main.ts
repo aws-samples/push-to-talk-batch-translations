@@ -8,8 +8,7 @@ import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-
 import { Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { BlockPublicAccess, Bucket, EventType, HttpMethods } from 'aws-cdk-lib/aws-s3';
-import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
+import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Choice, Condition, Fail, StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
@@ -32,6 +31,10 @@ export class MyStack extends Stack {
       ],
     });
 
+    new S3ToStepfunctions(this, 'test-s3-stepfunctions-stack', {
+      existingBucketObj: voiceTranslatorBucket,
+
+    });
     // const appSync2EventBridgeGraphQLApi = new CfnGraphQLApi(
     //   this,
     //   'AppSync2EventBridgeApi',
@@ -220,10 +223,6 @@ export class MyStack extends Stack {
         },
       });
 
-    // const waitX = new Wait(this, 'Wait X Seconds', {
-    //   time: WaitTime.secondsPath('$.waitSeconds'),
-    // });
-
     const transcribeJob = new LambdaInvoke(this, 'transcribeLambda', {
       lambdaFunction: transcribeLambda,
       // inputPath: '$.guid',
@@ -259,8 +258,6 @@ export class MyStack extends Stack {
       .otherwise(unknownState));
 
     // Write a step function that will loop until the status input is SUCCEEDED
-
-
     const TranscribeTranslatePollyDefinition = transcribeJob.next(getTranscribeStatus).next(jobComplete);
 
     // create step function to handle the workflow
@@ -286,21 +283,6 @@ export class MyStack extends Stack {
           STATE_MACHINE_ARN: primaryStepFunction.stateMachineArn,
         },
       });
-
-    startSfnLambda.addToRolePolicy(
-      new PolicyStatement({
-        actions: ['states:StartExecution'],
-        resources: [primaryStepFunction.stateMachineArn],
-        effect: Effect.ALLOW,
-      }),
-    );
-
-    voiceTranslatorBucket.addEventNotification(
-      EventType.OBJECT_CREATED_PUT,
-      new LambdaDestination(startSfnLambda),
-      { prefix: 'uploads/' },
-    );
-
 
     // Cognito Identity Pool
     const identityPool = new CfnIdentityPool(this, 'CognitoIdentityPool', {
@@ -361,6 +343,11 @@ export class MyStack extends Stack {
       description: 'VoiceTranslator Lambda',
       value: transcribeLambda.functionArn,
     });
+    new CfnOutput(this, 'startSfnLambda', {
+      description: 'startSfnLambda Lambda',
+      value: startSfnLambda.functionArn,
+    });
+
   }
 }
 
