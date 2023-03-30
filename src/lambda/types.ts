@@ -51,3 +51,18 @@ export enum Type {
 export interface Transcript {
   transcript: string;
 }
+
+export interface CreateTranslationRecordingsInput {
+  jobId: string;
+  bucket: string;
+  key: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+}
+
+
+export interface UpdateTranslationRecordingsInput extends CreateTranslationRecordingsInput{
+  transcription: string;
+  translatedText?: string;
+  pollyLocation?: string;
+}
