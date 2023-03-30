@@ -9,11 +9,16 @@ export interface TranscribeOutput extends TranscribeInput {
   jobId: string;
 }
 
+
 export interface GetTranscribeStatusOutput extends TranscribeOutput {
   status: string;
   transcriptFileUri: string;
 }
-
+export interface TranslationPollyRow extends GetTranscribeStatusOutput {
+  transcription?: string;
+  translatedText?: string;
+  pollyLocation?: string;
+}
 export interface tTranscriptServiceOutput {
   jobName: string;
   accountId: string;
