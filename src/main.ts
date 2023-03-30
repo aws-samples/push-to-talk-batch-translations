@@ -1,5 +1,4 @@
 import path from 'path';
-import { S3ToStepfunctions, S3ToStepfunctionsProps } from '@aws-solutions-constructs/aws-s3-stepfunctions';
 import { App, CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
 // import { CfnApiKey, CfnGraphQLApi, CfnGraphQLSchema } from 'aws-cdk-lib/aws-appsync';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
@@ -31,10 +30,6 @@ export class MyStack extends Stack {
       ],
     });
 
-    new S3ToStepfunctions(this, 'test-s3-stepfunctions-stack', {
-      existingBucketObj: voiceTranslatorBucket,
-
-    });
     // const appSync2EventBridgeGraphQLApi = new CfnGraphQLApi(
     //   this,
     //   'AppSync2EventBridgeApi',
@@ -109,7 +104,7 @@ export class MyStack extends Stack {
         S3Access: new PolicyDocument({
           statements: [
             new PolicyStatement({
-              actions: ['s3:GetObject', 's3:PutObject', 's3:PutObjectAcl'],
+              actions: ['s3:GetObject', 's3:PutObject', 's3:PutObjectAcl', 's3:ListBucket'],
               effect: Effect.ALLOW,
               resources: [`${voiceTranslatorBucket.bucketArn}/*`],
             }),
@@ -266,11 +261,27 @@ export class MyStack extends Stack {
       timeout: Duration.minutes(5),
     });
 
-    const startSfnLambda = new NodejsFunction(this,
-      'startSfnLambda', {
+    const startSfnRole = new Role(this, 'startSfnRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      inlinePolicies: {
+        SfnStart: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['states:StartExecution'],
+              effect: Effect.ALLOW,
+              resources: [primaryStepFunction.stateMachineArn],
+            }),
+          ],
+        }),
+        CloudWatchPolicy: cloudwatchPolicy,
+      },
+    });
+
+    const startTranslationSfnLambda = new NodejsFunction(this,
+      'startTranslationSfnLambda', {
         handler: 'handler',
         entry: path.join(__dirname, 'lambda', 'startSfnLambda.ts'),
-        role: transcribeLambdaRole,
+        role: startSfnRole,
         runtime: Runtime.NODEJS_18_X,
         architecture: Architecture.ARM_64,
         memorySize: 128,
@@ -345,7 +356,7 @@ export class MyStack extends Stack {
     });
     new CfnOutput(this, 'startSfnLambda', {
       description: 'startSfnLambda Lambda',
-      value: startSfnLambda.functionArn,
+      value: startTranslationSfnLambda.functionArn,
     });
 
   }

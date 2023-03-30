@@ -6,33 +6,33 @@ import {
   TranscribeClient,
 } from '@aws-sdk/client-transcribe';
 import { TranscribeInput, TranscribeOutput } from './types';
+import { getFileNameFromKey, getTranscribeLanguageCode } from './utilities';
 
 
 const transcribeClient = new TranscribeClient({ region: process.env.REGION || 'us-east-1' });
 
 async function transcribe(
   bucket: string,
-  key: string,
+  inputKey: string,
   sourceLanguage: string,
 ): Promise<string> {
-  const languageCode: LanguageCode = getLanguageCode(sourceLanguage);
-
-  // Build s3 path (s3://DOC-EXAMPLE-BUCKET/media-files/my-media-file.flac)
-  const s3Path = `s3://${bucket}/${key}.wav`;
-
+  const languageCode: LanguageCode = getTranscribeLanguageCode(sourceLanguage);
+  const s3Path = `s3://${bucket}/${inputKey}`;
+  const fileNameNoType = getFileNameFromKey(inputKey);
   try {
-    const transcription: StartTranscriptionJobCommandOutput = await transcribeClient.send(
-      new StartTranscriptionJobCommand({
-        TranscriptionJobName: `transcription-${languageCode}-${Date.now()}`,
-        LanguageCode: languageCode,
-        MediaFormat: MediaFormat.WAV,
-        Media: {
-          MediaFileUri: s3Path,
-        },
-        OutputBucketName: bucket,
-        OutputKey: (`transcription/${key}.json`).replace(/ /g, '_'),
-      }),
-    );
+    const command = new StartTranscriptionJobCommand({
+      TranscriptionJobName: `transcription-${languageCode}-${Date.now()}`,
+      LanguageCode: languageCode,
+      MediaFormat: MediaFormat.WAV,
+      Media: {
+        MediaFileUri: s3Path,
+      },
+      OutputBucketName: bucket,
+      OutputKey: (`transcription/${fileNameNoType}.json`).replace(/ /g, '_'),
+    });
+    const transcription: StartTranscriptionJobCommandOutput = await transcribeClient.send(command);
+
+    console.log(`transcription output, ${JSON.stringify(transcription)}`);
     const transcriptionJobName = transcription.TranscriptionJob?.TranscriptionJobName;
 
     if (!transcriptionJobName) {
@@ -47,36 +47,30 @@ async function transcribe(
   }
 }
 
-// TODO: Add more languages
-function getLanguageCode(sourceLanguage: string): LanguageCode {
-  switch (sourceLanguage) {
-    case 'es':
-      return LanguageCode.ES_US;
-    case 'gb':
-      return LanguageCode.EN_GB;
-    case 'ca':
-      return LanguageCode.FR_CA;
-    case 'fr':
-      return LanguageCode.FR_FR;
-    default:
-      return LanguageCode.EN_US;
-  }
-}
-
 export const handler = async (input: TranscribeInput): Promise<TranscribeOutput> => {
+  console.log('input: ', input);
+  // @ts-ignore
+  const inputKey = input.key || input.arguments.input.key;
+  // @ts-ignore
+  const inputBucket = input.bucket || input.arguments.input.bucket;
+  // @ts-ignore
+  const inputSourceLanguage = input.sourceLanguage || input.arguments.input.sourceLanguage;
+  // @ts-ignore
+  const inputTargetLanguage = input.targetLanguage || input.arguments.input.targetLanguage;
+
   const jobId = await transcribe(
-    input.bucket,
-    input.key,
-    input.sourceLanguage,
+    inputBucket,
+    inputKey,
+    inputSourceLanguage,
   );
 
   console.log('jobId: ', jobId);
   return {
     jobId: jobId,
-    bucket: input.bucket,
-    key: input.key,
-    sourceLanguage: input.sourceLanguage,
-    targetLanguage: input.targetLanguage,
+    bucket: inputBucket,
+    key: inputKey,
+    sourceLanguage: inputSourceLanguage,
+    targetLanguage: inputTargetLanguage,
   };
 };
 
