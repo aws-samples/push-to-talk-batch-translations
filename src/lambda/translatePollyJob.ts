@@ -3,14 +3,14 @@ import { GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client } 
 import { TranslateClient, TranslateTextCommand, TranslateTextCommandOutput } from '@aws-sdk/client-translate';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { default as fetch, Request } from 'node-fetch';
-import { GetTranscribeStatusOutput, TranslationPollyRow } from './types';
+import { CreateTranslationRecordingsInput, GetTranscribeStatusOutput, UpdateTranslationRecordingsInput } from './types';
 import { getFileNameFromKey, handlePollyLanguageCode, handleVoiceId } from './utilities';
 
 const s3 = new S3Client({ region: process.env.REGION || 'us-east-1' });
 const translateClient = new TranslateClient({ region: process.env.REGION || 'us-east-1' });
 const pollyClient = new PollyClient({ region: process.env.REGION || 'us-east-1' });
-const GRAPHQL_ENDPOINT = 'https://d6myzu3n4nehrpuryebzkbjria.appsync-api.us-west-2.amazonaws.com/graphql';
-const GRAPHQL_API_KEY = 'da2-6nw5jfnds5hsvkmlolu46g2h2i';
+const GRAPHQL_ENDPOINT = process.env.API_GRAPHQLAPIENDPOINT || '';
+const GRAPHQL_API_KEY = process.env.API_GRAPHQLAPIKEY || '';
 
 async function translateText(
   text: string,
@@ -50,7 +50,7 @@ async function synthesizePollySpeech(text: string, language: string, key: string
     TextType: 'text',
     LanguageCode: languageCode,
   });
-  const suffix = key.split('/')[1];
+  const fileName = getFileNameFromKey(key);
 
   try {
     const synthesizeSpeechResult: SynthesizeSpeechCommandOutput = await pollyClient.send(synthesizeSpeechRequest);
@@ -63,7 +63,7 @@ async function synthesizePollySpeech(text: string, language: string, key: string
     const s3Response = await s3.send(
       new PutObjectCommand({
         Bucket: bucket,
-        Key: `voice/${suffix}`,
+        Key: `voice/${fileName}`,
         Body: arrayBuffer as any,
         ContentEncoding: 'base64',
         Metadata: {
@@ -76,7 +76,7 @@ async function synthesizePollySpeech(text: string, language: string, key: string
   } catch (e: any) {
     console.error(e.toString());
   }
-  return { FileName: `voice/${suffix}.mp3` };
+  return { FileName: `voice/${fileName}.mp3` };
 }
 
 async function getTranscriptFile(bucket: string, inputKey: string): Promise<string> {
@@ -100,20 +100,8 @@ async function getTranscriptFile(bucket: string, inputKey: string): Promise<stri
 
 }
 
-async function callAppSyncEndpoint(input: TranslationPollyRow) {
-
-  const query = `
-    mutation updateTranslationRecordings($input: UpdateTranslationRecordingsInput!) {
-      updateTranslationRecordings(input: $input) {
-        targetLanguage
-        transcription
-        translatedText
-        sourceLanguage
-        pollyLocation
-      }
-    }
-  `;
-
+async function callAppSyncEndpoint(input: CreateTranslationRecordingsInput|UpdateTranslationRecordingsInput, query: string) {
+  console.log(`Calling AppSync Endpoint: ${JSON.stringify(input)}`);
   const options = {
     method: 'POST',
     headers: {
@@ -123,7 +111,7 @@ async function callAppSyncEndpoint(input: TranslationPollyRow) {
     body: JSON.stringify({
       query,
       variables: {
-        ...input,
+        input,
       },
     }),
   };
@@ -141,39 +129,74 @@ async function callAppSyncEndpoint(input: TranslationPollyRow) {
   }
 }
 
+const createQuery = `
+
+    mutation createTranslationRecordings($input: CreateTranslationRecordingsInput!) {
+      createTranslationRecordings(input: $input) {
+        bucket
+        key
+        sourceLanguage
+        targetLanguage
+      }
+    }
+ `;
+
+const updateQuery = `
+    mutation updateTranslationRecordings($input: UpdateTranslationRecordingsInput!) {
+      updateTranslationRecordings(input: $input) {
+        targetLanguage
+        transcription
+        translatedText
+        sourceLanguage
+        pollyLocation
+      }
+    }
+  `;
+
 export const handler = async (input: GetTranscribeStatusOutput) => {
-  console.log('input', input);
+  if (GRAPHQL_ENDPOINT.length === 0 || GRAPHQL_API_KEY.length === 0) {
+    console.error('Missing environment variables for GRAPHQL_ENDPOINT or GRAPHQL_API_KEY');
+  }
   const escapedKey = input.key.replace(/ /g, '_');
 
   const transcript = await getTranscriptFile(input.bucket, escapedKey);
-  console.log(`transcription successful: ${JSON.stringify(transcript)}`);
-  await callAppSyncEndpoint({
-    ...input,
-    transcription: transcript,
-  });
+  let dynamoRow: CreateTranslationRecordingsInput = {
+    jobId: input.jobId,
+    bucket: input.bucket,
+    key: input.key,
+    sourceLanguage: input.sourceLanguage,
+    targetLanguage: input.targetLanguage,
+  };
+  await callAppSyncEndpoint(dynamoRow, createQuery);
 
   const translatedText = await translateText(
     transcript,
     input.sourceLanguage,
     input.targetLanguage,
   );
-  await callAppSyncEndpoint({
-    ...input,
+  let putDynamoRow: UpdateTranslationRecordingsInput = {
+    ...dynamoRow,
+    transcription: transcript,
     translatedText,
-  });
+  };
+
+  await callAppSyncEndpoint(putDynamoRow, updateQuery);
 
   console.log(`translatedText: ${JSON.stringify(translatedText)}`);
 
-  const outputPollyFile = await synthesizePollySpeech(translatedText,
+  const outputPollyFile = await synthesizePollySpeech(
+    translatedText,
     input.targetLanguage,
     escapedKey,
     input.bucket,
   );
-    // Call appsync to update the row with the polly location
-  await callAppSyncEndpoint({
-    ...input,
+  putDynamoRow = {
+    ...putDynamoRow,
     pollyLocation: outputPollyFile.FileName,
-  });
+  };
+
+  // Call appsync to update the row with the polly location
+  await callAppSyncEndpoint(putDynamoRow, updateQuery);
 
   console.log('outputPollyFile ', outputPollyFile);
   return {
