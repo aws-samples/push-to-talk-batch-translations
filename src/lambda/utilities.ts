@@ -2,7 +2,8 @@ import { LanguageCode as PollyLanguageCode, VoiceId } from '@aws-sdk/client-poll
 import { LanguageCode as TranscribeLanguageCode } from '@aws-sdk/client-transcribe';
 
 export const getFileNameFromKey = (inputKey: string) => {
-  return inputKey.split('/')[1].split('.')[0];
+  const separatedValues = inputKey.split('/');
+  return separatedValues[separatedValues.length-1].split('.')[0];
 };
 
 export const handlePollyLanguageCode = (targetLanguage: string) => {

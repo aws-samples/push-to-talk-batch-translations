@@ -11,7 +11,8 @@ import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Choice, Condition, Fail, StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
-
+import * as dotenv from 'dotenv'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+dotenv.config();
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
@@ -216,6 +217,10 @@ export class MyStack extends Stack {
           minify: true,
           externalModules: ['aws-sdk'],
         },
+        environment: {
+          API_GRAPHQLAPIENDPOINT: process.env.API_GRAPHQLAPIENDPOINT || '',
+          API_GRAPHQLAPIKEY: process.env.API_GRAPHQLAPIKEY || '',
+        },
       });
 
     const transcribeJob = new LambdaInvoke(this, 'transcribeLambda', {
@@ -357,6 +362,11 @@ export class MyStack extends Stack {
     new CfnOutput(this, 'startSfnLambda', {
       description: 'startSfnLambda Lambda',
       value: startTranslationSfnLambda.functionArn,
+    });
+
+    new CfnOutput(this, 'graphql endpoint', {
+      description: 'graphql endpoint',
+      value: process.env.API_GRAPHQLAPIENDPOINT || '',
     });
 
   }
