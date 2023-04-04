@@ -51,6 +51,7 @@ async function synthesizePollySpeech(text: string, language: string, key: string
     LanguageCode: languageCode,
   });
   const fileName = getFileNameFromKey(key);
+  const fileType = 'mp3';
 
   try {
     const synthesizeSpeechResult: SynthesizeSpeechCommandOutput = await pollyClient.send(synthesizeSpeechRequest);
@@ -63,11 +64,11 @@ async function synthesizePollySpeech(text: string, language: string, key: string
     const s3Response = await s3.send(
       new PutObjectCommand({
         Bucket: bucket,
-        Key: `voice/${fileName}`,
+        Key: `public/voice/${fileName}.${fileType}`,
         Body: arrayBuffer as any,
         ContentEncoding: 'base64',
         Metadata: {
-          'Content-Type': 'audio/wav',
+          'Content-Type': `audio/${fileType}`,
         },
       }),
     );
@@ -76,7 +77,7 @@ async function synthesizePollySpeech(text: string, language: string, key: string
   } catch (e: any) {
     console.error(e.toString());
   }
-  return { FileName: `voice/${fileName}.mp3` };
+  return { FileName: `voice/${fileName}.${fileType}` };
 }
 
 async function getTranscriptFile(bucket: string, inputKey: string): Promise<string> {

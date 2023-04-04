@@ -19,17 +19,19 @@ async function transcribe(
   const languageCode: LanguageCode = getTranscribeLanguageCode(sourceLanguage);
   const s3Path = `s3://${bucket}/${inputKey}`;
   const fileNameNoType = getFileNameFromKey(inputKey);
+  console.log(`Transcribing ${s3Path} to ${languageCode}...`);
   try {
     const command = new StartTranscriptionJobCommand({
       TranscriptionJobName: `transcription-${languageCode}-${Date.now()}`,
       LanguageCode: languageCode,
-      MediaFormat: MediaFormat.WAV,
+      MediaFormat: MediaFormat.WEBM,
       Media: {
         MediaFileUri: s3Path,
       },
       OutputBucketName: bucket,
       OutputKey: (`transcription/${fileNameNoType}.json`).replace(/ /g, '_'),
     });
+    console.log(`command: ${JSON.stringify(command)} `);
     const transcription: StartTranscriptionJobCommandOutput = await transcribeClient.send(command);
 
     console.log(`transcription output, ${JSON.stringify(transcription)}`);
