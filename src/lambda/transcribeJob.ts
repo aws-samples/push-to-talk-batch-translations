@@ -1,6 +1,5 @@
 import {
   LanguageCode,
-  MediaFormat,
   StartTranscriptionJobCommand,
   StartTranscriptionJobCommandOutput,
   TranscribeClient,
@@ -24,7 +23,6 @@ async function transcribe(
     const command = new StartTranscriptionJobCommand({
       TranscriptionJobName: `transcription-${languageCode}-${Date.now()}`,
       LanguageCode: languageCode,
-      MediaFormat: MediaFormat.WEBM,
       Media: {
         MediaFileUri: s3Path,
       },
