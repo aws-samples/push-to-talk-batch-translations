@@ -1,0 +1,14 @@
+{
+  "version": "2017-02-28",
+  "operation": "PutItem",
+  "key": {
+    "jobId": $util.dynamodb.toDynamoDBJson($ctx.args.input.jobId),
+  },
+  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input),
+  "condition": {
+    "expression": "attribute_not_exists(#jobId)",
+    "expressionNames": {
+      "#jobId": "jobId",
+    },
+  },
+}
