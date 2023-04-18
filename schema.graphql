@@ -1,0 +1,139 @@
+input CreateTranslationRecordingsInput {
+	jobId: ID!
+	bucket: String
+	key: String
+	sourceLanguage: String
+	targetLanguage: String
+}
+
+input DeleteTranslationRecordingsInput {
+	jobId: ID!
+}
+
+type Mutation {
+	startTranslationSfn(input: CreateTranslationRecordingsInput!): TranslationRecordings
+	createTranslationRecordings(input: CreateTranslationRecordingsInput!): TranslationRecordings
+	updateTranslationRecordings(input: UpdateTranslationRecordingsInput!): TranslationRecordings
+	deleteTranslationRecordings(input: DeleteTranslationRecordingsInput!): TranslationRecordings
+}
+
+type Query {
+	getTranslationRecordings(jobId: ID!): TranslationRecordings
+	listTranslationRecordings(filter: TableTranslationRecordingsFilterInput, limit: Int, nextToken: String): TranslationRecordingsConnection
+}
+
+type Subscription {
+	onCreateTranslationRecordings(
+		jobId: ID,
+		bucket: String,
+		key: String,
+		sourceLanguage: String,
+		targetLanguage: String
+	): TranslationRecordings
+		@aws_subscribe(mutations: ["createTranslationRecordings"])
+	onUpdateTranslationRecordings(
+		jobId: ID,
+		bucket: String,
+		key: String,
+		sourceLanguage: String,
+		targetLanguage: String
+	): TranslationRecordings
+		@aws_subscribe(mutations: ["updateTranslationRecordings"])
+	onDeleteTranslationRecordings(
+		jobId: ID,
+		bucket: String,
+		key: String,
+		sourceLanguage: String,
+		targetLanguage: String
+	): TranslationRecordings
+		@aws_subscribe(mutations: ["deleteTranslationRecordings"])
+}
+
+input TableBooleanFilterInput {
+	ne: Boolean
+	eq: Boolean
+}
+
+input TableFloatFilterInput {
+	ne: Float
+	eq: Float
+	le: Float
+	lt: Float
+	ge: Float
+	gt: Float
+	contains: Float
+	notContains: Float
+	between: [Float]
+}
+
+input TableIDFilterInput {
+	ne: ID
+	eq: ID
+	le: ID
+	lt: ID
+	ge: ID
+	gt: ID
+	contains: ID
+	notContains: ID
+	between: [ID]
+	beginsWith: ID
+}
+
+input TableIntFilterInput {
+	ne: Int
+	eq: Int
+	le: Int
+	lt: Int
+	ge: Int
+	gt: Int
+	contains: Int
+	notContains: Int
+	between: [Int]
+}
+
+input TableStringFilterInput {
+	ne: String
+	eq: String
+	le: String
+	lt: String
+	ge: String
+	gt: String
+	contains: String
+	notContains: String
+	between: [String]
+	beginsWith: String
+}
+
+input TableTranslationRecordingsFilterInput {
+	jobId: TableIDFilterInput
+	bucket: TableStringFilterInput
+	key: TableStringFilterInput
+	sourceLanguage: TableStringFilterInput
+	targetLanguage: TableStringFilterInput
+}
+
+type TranslationRecordings {
+	bucket: String
+	key: String
+	sourceLanguage: String
+	targetLanguage: String
+	transcription: String
+	translatedText: String
+	pollyLocation: String
+}
+
+type TranslationRecordingsConnection {
+	items: [TranslationRecordings]
+	nextToken: String
+}
+
+input UpdateTranslationRecordingsInput {
+	jobId: ID!
+	bucket: String
+	key: String
+	sourceLanguage: String
+	targetLanguage: String
+	transcription: String
+	translatedText: String
+	pollyLocation: String
+}

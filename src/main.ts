@@ -1,9 +1,15 @@
 import path from 'path';
+import {
+  GraphqlApi,
+  MappingTemplate,
+  FieldLogLevel,
+  Schema,
+} from '@aws-cdk/aws-appsync-alpha';
 import { App, CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
-// import { CfnApiKey, CfnGraphQLApi, CfnGraphQLSchema } from 'aws-cdk-lib/aws-appsync';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-cognito';
+import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -11,7 +17,7 @@ import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Choice, Condition, Fail, StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
-import * as dotenv from 'dotenv'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+import * as dotenv from 'dotenv';
 dotenv.config();
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -30,38 +36,6 @@ export class MyStack extends Stack {
         },
       ],
     });
-
-    // const appSync2EventBridgeGraphQLApi = new CfnGraphQLApi(
-    //   this,
-    //   'AppSync2EventBridgeApi',
-    //   {
-    //     name: 'AppSync2StepFunction-API',
-    //     authenticationType: 'API_KEY',
-    //   },
-    // );
-    // new CfnApiKey(this, 'AppSync2StepFunctionApiKey', {
-    //   apiId: appSync2EventBridgeGraphQLApi.attrApiId,
-    // });
-    //
-    // const apiSchema = new CfnGraphQLSchema(this, 'TranslateSchema', {
-    //   apiId: appSync2EventBridgeGraphQLApi.attrApiId,
-    //   definition: `
-    //   type Event {
-    //     result: String
-    //   }
-    //   type Mutation {
-    //     putEvent(event: String!): Event
-    //   }
-    //   type Subscription {
-    //         updatedEvent: Event
-    //         @aws_subscribe(mutations: ["putEvent"])
-    //   }
-    //   schema {
-    //     subscription: Subscription
-    //     mutation: Mutation
-    //   }`,
-    // });
-
 
     // CloudFront
     const cfDistribution = new Distribution(this, 'CfDistribution', {
@@ -299,6 +273,101 @@ export class MyStack extends Stack {
           STATE_MACHINE_ARN: primaryStepFunction.stateMachineArn,
         },
       });
+
+    // create dynamodb table
+    const translationRecordingTable = new Table(this, 'TranslationRecordingTable', {
+      partitionKey: {
+        name: 'jobId',
+        type: AttributeType.STRING,
+      },
+    });
+
+
+    const appSync2EventBridgeGraphQLApi = new GraphqlApi(
+      this,
+      'AppSyncLiveTranslationApi',
+      {
+        schema: Schema.fromAsset(path.join(__dirname, 'graphql/schema.graphql')),
+        name: 'AppSync2StepFunction-API',
+        authenticationConfig: {
+          defaultAuthentication: {
+            apiKeyConfig: {
+              description: 'API Key for AppSyncLiveTranslationApi',
+              expires: Duration.days(365),
+            },
+          },
+        },
+        logConfig: {
+          fieldLogLevel: FieldLogLevel.ALL,
+        },
+      },
+    );
+
+
+    const translationRecordingDataSource = appSync2EventBridgeGraphQLApi.addDynamoDbDataSource(
+      'translationRecordingDataSource',
+      translationRecordingTable,
+    );
+
+    const startTranslationSfnDataSource = appSync2EventBridgeGraphQLApi.addLambdaDataSource(
+      'startTranslationSfnDataSource',
+      startTranslationSfnLambda,
+      {
+        name: 'startTranslationSfnDataSource',
+        description: 'startTranslationSfnDataSource desc',
+      },
+    );
+
+    translationRecordingDataSource.createResolver({
+      typeName: 'Query',
+      fieldName: 'getTranslationRecording',
+      requestMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Query.getTranslationRecordings.req.vtl'),
+      ),
+      responseMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Query.getTranslationRecordings.req.vtl'),
+      ),
+    });
+
+    translationRecordingDataSource.createResolver({
+      typeName: 'Query',
+      fieldName: 'listTranslationRecordings',
+      requestMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Query.listTranslationRecordings.req.vtl'),
+      ),
+      responseMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Query.listTranslationRecordings.req.vtl'),
+      ),
+    });
+
+    translationRecordingDataSource.createResolver({
+      typeName: 'Mutation',
+      fieldName: 'createTranslationRecordings',
+      requestMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Mutation.createTranslationRecordings.req.vtl'),
+      ),
+      responseMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Mutation.createTranslationRecordings.req.vtl'),
+      ),
+    });
+
+    translationRecordingDataSource.createResolver({
+      typeName: 'Mutation',
+      fieldName: 'updateTranslationRecordings',
+      requestMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Mutation.updateTranslationRecordings.req.vtl'),
+      ),
+      responseMappingTemplate: MappingTemplate.fromFile(
+        path.join(__dirname, 'graphql/mappingTemplates/Mutation.updateTranslationRecordings.req.vtl'),
+      ),
+    });
+
+    startTranslationSfnDataSource.createResolver(
+      {
+        typeName: 'Mutation',
+        fieldName: 'startTranslationSfn',
+      },
+    );
 
     // Cognito Identity Pool
     const identityPool = new CfnIdentityPool(this, 'CognitoIdentityPool', {

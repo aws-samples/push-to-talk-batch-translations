@@ -131,7 +131,6 @@ async function callAppSyncEndpoint(input: CreateTranslationRecordingsInput|Updat
 }
 
 const createQuery = `
-
     mutation createTranslationRecordings($input: CreateTranslationRecordingsInput!) {
       createTranslationRecordings(input: $input) {
         bucket
