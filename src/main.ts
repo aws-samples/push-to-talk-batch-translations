@@ -5,7 +5,8 @@ import {
   FieldLogLevel,
   Schema,
 } from '@aws-cdk/aws-appsync-alpha';
-import { App, CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { AuthorizationType } from '@aws-cdk/aws-appsync-alpha/lib/graphqlapi';
+import { App, CfnOutput, Duration, Expiration, Stack, StackProps } from 'aws-cdk-lib';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-cognito';
@@ -283,17 +284,19 @@ export class MyStack extends Stack {
     });
 
 
-    const appSync2EventBridgeGraphQLApi = new GraphqlApi(
+    const appSync2LiveTranslationApi = new GraphqlApi(
       this,
       'AppSyncLiveTranslationApi',
       {
         schema: Schema.fromAsset(path.join(__dirname, 'graphql/schema.graphql')),
         name: 'AppSync2StepFunction-API',
-        authenticationConfig: {
-          defaultAuthentication: {
+        authorizationConfig: {
+          defaultAuthorization: {
+            authorizationType: AuthorizationType.API_KEY,
             apiKeyConfig: {
+              name: 'AppSyncAPIKey',
               description: 'API Key for AppSyncLiveTranslationApi',
-              expires: Duration.days(365),
+              expires: Expiration.after(Duration.days(365)),
             },
           },
         },
@@ -304,12 +307,12 @@ export class MyStack extends Stack {
     );
 
 
-    const translationRecordingDataSource = appSync2EventBridgeGraphQLApi.addDynamoDbDataSource(
+    const translationRecordingDataSource = appSync2LiveTranslationApi.addDynamoDbDataSource(
       'translationRecordingDataSource',
       translationRecordingTable,
     );
 
-    const startTranslationSfnDataSource = appSync2EventBridgeGraphQLApi.addLambdaDataSource(
+    const startTranslationSfnDataSource = appSync2LiveTranslationApi.addLambdaDataSource(
       'startTranslationSfnDataSource',
       startTranslationSfnLambda,
       {
@@ -320,7 +323,7 @@ export class MyStack extends Stack {
 
     translationRecordingDataSource.createResolver({
       typeName: 'Query',
-      fieldName: 'getTranslationRecording',
+      fieldName: 'getTranslationRecordings',
       requestMappingTemplate: MappingTemplate.fromFile(
         path.join(__dirname, 'graphql/mappingTemplates/Query.getTranslationRecordings.req.vtl'),
       ),
