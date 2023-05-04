@@ -7,6 +7,9 @@
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
       <excludeFolder url="file://$MODULE_DIR$/.idea/jsLinters" />
       <excludeFolder url="file://$MODULE_DIR$/cdk.out" />
+      <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/amplify/#current-cloud-backend" />
+      <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/amplify/backend/awscloudformation/build" />
+      <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/node_modules" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
