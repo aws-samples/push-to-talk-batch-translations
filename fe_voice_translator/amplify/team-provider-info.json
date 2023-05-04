@@ -12,26 +12,20 @@
       "AmplifyAppId": "d2riye0k12j8gr"
     },
     "categories": {
-      "auth": {
-        "voicetranslatoreastce81d7ec": {
-          "userPoolId": "us-east-1_MYHP8vnaK",
-          "userPoolName": "acceleratorsdashb044c855_userpool_b044c855-dev",
-          "webClientId": "jjlarumj7041hrlji3pm4br6j",
-          "nativeClientId": "2tt83uha2k5pnrq657vmafq3qh",
-          "identityPoolId": "us-east-1:75337777-eefc-439a-9f6e-3d384c26f60f",
-          "identityPoolName": "acceleratorsdashb044c855_identitypool_b044c855__dev",
-          "allowUnauthenticatedIdentities": false,
-          "authRoleArn": "arn:aws:iam::098305555551:role/amplify-acceleratorsdash-dev-160612-authRole",
-          "authRoleName": "amplify-acceleratorsdash-dev-160612-authRole",
-          "unauthRoleArn": "arn:aws:iam::098305555551:role/amplify-acceleratorsdash-dev-160612-unauthRole",
-          "unauthRoleName": "amplify-acceleratorsdash-dev-160612-unauthRole"
-        }
-      },
       "storage": {
         "voicetranslatoreastffe6b014": {
           "bucketName": "translation-walkie-talki-voicetranslatorbucket49a-1d79pna6p5ltk",
           "region": "us-east-1"
         }
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d2riye0k12j8gr",
+          "type": "manual"
+        }
+      },
+      "auth": {
+        "voicetranslatoreast34e3ceef": {}
       }
     }
   }

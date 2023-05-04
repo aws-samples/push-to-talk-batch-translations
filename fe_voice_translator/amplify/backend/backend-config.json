@@ -1,99 +1,53 @@
 {
   "auth": {
-    "voicetranslatoreastce81d7ec": {
+    "voicetranslatoreast34e3ceef": {
       "customAuth": false,
       "dependsOn": [],
+      "frontendAuthConfig": {
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyCharacters": [],
+          "passwordPolicyMinLength": 8
+        },
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "socialProviders": [],
+        "usernameAttributes": [
+          "EMAIL"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
       "providerPlugin": "awscloudformation",
-      "service": "Cognito",
-      "serviceType": "imported"
+      "service": "Cognito"
+    }
+  },
+  "hosting": {
+    "amplifyhosting": {
+      "providerPlugin": "awscloudformation",
+      "service": "amplifyhosting",
+      "type": "manual"
     }
   },
   "parameters": {
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_allowUnauthenticatedIdentities": {
+    "AMPLIFY_hosting_amplifyhosting_appId": {
       "usedBy": [
         {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
+          "category": "hosting",
+          "resourceName": "amplifyhosting"
         }
       ]
     },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_authRoleArn": {
+    "AMPLIFY_hosting_amplifyhosting_type": {
       "usedBy": [
         {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_authRoleName": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_identityPoolId": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_identityPoolName": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_nativeClientId": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_unauthRoleArn": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_unauthRoleName": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_userPoolId": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_userPoolName": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
-        }
-      ]
-    },
-    "AMPLIFY_auth_voicetranslatoreastce81d7ec_webClientId": {
-      "usedBy": [
-        {
-          "category": "auth",
-          "resourceName": "voicetranslatoreastce81d7ec"
+          "category": "hosting",
+          "resourceName": "amplifyhosting"
         }
       ]
     },
