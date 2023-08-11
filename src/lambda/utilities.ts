@@ -3,6 +3,7 @@ import { LanguageCode as TranscribeLanguageCode } from '@aws-sdk/client-transcri
 
 export const getFileNameFromKey = (inputKey: string) => {
   const separatedValues = inputKey.split('/');
+  console.log(inputKey, 'inputKey');
   return separatedValues[separatedValues.length-1].split('.')[0];
 };
 
