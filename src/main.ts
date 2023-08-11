@@ -173,10 +173,6 @@ export class MyStack extends Stack {
         architecture: Architecture.ARM_64,
         memorySize: 128,
         timeout: Duration.seconds(30),
-        bundling: {
-          minify: true,
-          externalModules: ['aws-sdk'],
-        },
       });
 
     const translatePollyLambda = new NodejsFunction(this,
@@ -188,13 +184,10 @@ export class MyStack extends Stack {
         architecture: Architecture.ARM_64,
         memorySize: 128,
         timeout: Duration.seconds(30),
-        bundling: {
-          minify: true,
-          externalModules: ['aws-sdk'],
-        },
         environment: {
           API_GRAPHQLAPIENDPOINT: process.env.API_GRAPHQLAPIENDPOINT || '',
           API_GRAPHQLAPIKEY: process.env.API_GRAPHQLAPIKEY || '',
+          REGION: props.env?.region || 'us-east-1',
         },
       });
 
@@ -272,6 +265,7 @@ export class MyStack extends Stack {
         },
         environment: {
           STATE_MACHINE_ARN: primaryStepFunction.stateMachineArn,
+          REGION: props.env?.region || 'us-east-1',
         },
       });
 
@@ -350,7 +344,7 @@ export class MyStack extends Stack {
         path.join(__dirname, 'graphql/mappingTemplates/Mutation.createTranslationRecordings.req.vtl'),
       ),
       responseMappingTemplate: MappingTemplate.fromFile(
-        path.join(__dirname, 'graphql/mappingTemplates/Mutation.createTranslationRecordings.req.vtl'),
+        path.join(__dirname, 'graphql/mappingTemplates/Mutation.default.response.vtl'),
       ),
     });
 
@@ -360,8 +354,9 @@ export class MyStack extends Stack {
       requestMappingTemplate: MappingTemplate.fromFile(
         path.join(__dirname, 'graphql/mappingTemplates/Mutation.updateTranslationRecordings.req.vtl'),
       ),
+      // $util.toJson($context.result)
       responseMappingTemplate: MappingTemplate.fromFile(
-        path.join(__dirname, 'graphql/mappingTemplates/Mutation.updateTranslationRecordings.req.vtl'),
+        path.join(__dirname, 'graphql/mappingTemplates/Mutation.default.response.vtl'),
       ),
     });
 
@@ -412,11 +407,6 @@ export class MyStack extends Stack {
       value: `https://${cfDistribution.distributionDomainName}/voice-translator.html`,
     });
 
-    // new CfnOutput(this, 'apiSchema', {
-    //   description: 'apiSchema.apiId: ',
-    //   value: `${apiSchema.apiId}`,
-    // });
-
     new CfnOutput(this, 'VoiceTranslatorBucketOutput', {
       description: 'VoiceTranslator S3 Bucket',
       value: voiceTranslatorBucket.bucketName,
@@ -445,9 +435,11 @@ export class MyStack extends Stack {
 }
 
 // for development, use account/region from cdk cli
+const REGION = 'ap-south-1';
+
 const devEnv = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION,
+  region: REGION,
 };
 
 const app = new App();

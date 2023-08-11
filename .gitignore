@@ -44,6 +44,8 @@ junit.xml
 !/src/
 /lib
 /dist/
+.env
+
 !/.eslintrc.json
 /assets/
 !/cdk.json
