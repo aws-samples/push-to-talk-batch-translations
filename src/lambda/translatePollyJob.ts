@@ -82,14 +82,18 @@ async function synthesizePollySpeech(text: string, language: string, key: string
 
 async function getTranscriptFile(bucket: string, inputKey: string): Promise<string> {
   const fileNameNoType = getFileNameFromKey(inputKey);
-
+  console.log(fileNameNoType, 'fileNameNoType' );
   const transcriptS3GetCommand = new GetObjectCommand({
     Bucket: bucket,
     Key: `transcription/${fileNameNoType}.json`,
   });
   try {
     const transcriptResponse: GetObjectCommandOutput = await s3.send(transcriptS3GetCommand);
+    console.log(transcriptResponse, 'transcriptResponse' );
+
     const transcriptRaw = await transcriptResponse?.Body?.transformToString('utf-8') || '';
+    console.log(transcriptRaw, 'transcriptRaw' );
+
     const transcript = JSON.parse(transcriptRaw)?.results.transcripts[0].transcript;
     console.log('transcript', JSON.stringify(transcript));
     return transcript;
@@ -98,9 +102,7 @@ async function getTranscriptFile(bucket: string, inputKey: string): Promise<stri
     console.error(e.toString());
     return '';
   }
-
 }
-
 async function callAppSyncEndpoint(input: CreateTranslationRecordingsInput|UpdateTranslationRecordingsInput, query: string) {
   console.log(`Calling AppSync Endpoint: ${JSON.stringify(input)}`);
   const options = {
@@ -120,10 +122,10 @@ async function callAppSyncEndpoint(input: CreateTranslationRecordingsInput|Updat
   try {
     const response = await fetch(new Request(GRAPHQL_ENDPOINT, options));
     const jsonResponse = await response.json();
-    console.log(jsonResponse, 'response from Dynamodb');
+    console.log(jsonResponse, 'response from Dynamodb - ', query);
     return jsonResponse;
   } catch (error) {
-    console.error(error, 'error from Dynamodb');
+    console.error(error, 'error from Dynamodb - ', query);
     return {
       errors: error,
     };
