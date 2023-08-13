@@ -1,0 +1,15 @@
+projects:
+  AppSync2StepFunction-API:
+    schemaPath: src/graphql/schema.json
+    includes:
+      - src/graphql/**/*.ts
+    excludes:
+      - ./amplify/**
+    extensions:
+      amplify:
+        codeGenTarget: typescript
+        generatedFileName: src/API.ts
+        docsFilePath: src/graphql
+        region: ap-south-1
+        apiId: thcbhwypfbdhxknge4m3dlc2fa
+        maxDepth: 2
