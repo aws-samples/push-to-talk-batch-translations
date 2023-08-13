@@ -10,6 +10,8 @@
       <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/amplify/#current-cloud-backend" />
       <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/amplify/backend/awscloudformation/build" />
       <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/amplify/backend/auth/mumbaie807a01b/build" />
+      <excludeFolder url="file://$MODULE_DIR$/fe_voice_translator/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
