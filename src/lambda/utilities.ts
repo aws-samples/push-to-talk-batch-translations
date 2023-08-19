@@ -12,10 +12,11 @@ export const handlePollyLanguageCode = (targetLanguage: string) => {
   switch (targetLanguage) {
     case 'ar':
       return PollyLanguageCode.ar_AE;
-      // case 'af':
-      //     return PollyLanguageCode.af_ZA;
-      // case 'he':
-      //   return PollyLanguageCode.he_IL;
+    case 'af':
+      return PollyLanguageCode.en_ZA;
+    // TODO: No Hebrew support
+    // case 'he':
+      //   return PollyLanguageCode;
     case 'zh':
       return PollyLanguageCode.cmn_CN;
     case 'ja':
@@ -103,6 +104,10 @@ export const handleVoiceId = (language: string): VoiceId => {
 
   if (language === 'ca') {
     voiceId = VoiceId.Chantal;
+  }
+
+  if (language === 'af') {
+    voiceId = VoiceId.Filiz;
   }
   return voiceId;
 };
