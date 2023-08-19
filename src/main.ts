@@ -162,6 +162,7 @@ export class MyStack extends Stack {
           minify: true,
           externalModules: ['aws-sdk'],
         },
+        depsLockFilePath: './yarn.lock',
       });
 
     const getTranscribeStatusLambda = new NodejsFunction(this,
@@ -173,6 +174,7 @@ export class MyStack extends Stack {
         architecture: Architecture.ARM_64,
         memorySize: 128,
         timeout: Duration.seconds(30),
+        depsLockFilePath: './yarn.lock',
       });
 
     const translatePollyLambda = new NodejsFunction(this,
@@ -184,6 +186,7 @@ export class MyStack extends Stack {
         architecture: Architecture.ARM_64,
         memorySize: 128,
         timeout: Duration.seconds(30),
+        depsLockFilePath: './yarn.lock',
         environment: {
           API_GRAPHQLAPIENDPOINT: process.env.API_GRAPHQLAPIENDPOINT || '',
           API_GRAPHQLAPIKEY: process.env.API_GRAPHQLAPIKEY || '',
@@ -259,6 +262,7 @@ export class MyStack extends Stack {
         architecture: Architecture.ARM_64,
         memorySize: 128,
         timeout: Duration.seconds(30),
+        depsLockFilePath: './yarn.lock',
         bundling: {
           minify: true,
           externalModules: ['aws-sdk'],
