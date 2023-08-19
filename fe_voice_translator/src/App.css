@@ -1,0 +1,366 @@
+:root {
+  --blue: #0972d3;
+  --darkblue: #033160;
+  --lightblue: #b5d6f4;
+  --danger: #d91515;
+  --darkred: #c90505;
+  --gray: #d8d8d8;
+}
+
+html *{
+  font-size:1.3rem;
+  line-height:1.4rem;
+}
+body {
+  min-height: 100vh !important;  
+  padding-left:40px;
+  padding-right:40px;
+  padding-top:20px;
+}
+h1:focus, h2:focus, h3:focus{outline: none;}
+#signOut{position:absolute !important;right:1rem;top:.3rem;}
+#intro img.aws_logo{width:95px;margin-bottom:5vh}
+#intro *{margin-top:0px;margin-bottom:0px;margin-top:0px}
+#intro h1, #intro h2, #intro p{margin-top:6vh !important}
+#intro h1{ font-size:6vh !important; }
+#intro h2{ font-size:5vh !important; line-height:140% !important;}
+#intro .awsui_content_vjswe_qgmad_97{line-height:250% !important;padding-right:15px;padding-left:15px}
+#intro .awsui_button_vjswe_qgmad_101.awsui_variant-primary_vjswe_qgmad_210:not(#\9){
+  border-radius:70px;
+}
+.architecture_icons img{
+  max-width:20%;
+}
+.architecture_icons img {
+  filter: saturate(0) invert(1) contrast(.5) brightness(2.7) !important;
+  opacity:.8;
+}
+
+.step_2 img:nth-child(2), .step_3 img:nth-child(3),   .step_1 img:nth-child(1){
+    filter: none !important;
+    opacity:1;
+}
+    
+#root h1{
+  font-size: var(--font-heading-l-size-otmxys, 24px);
+  line-height: var(--font-heading-l-line-height-gev4n1, 30px);
+  letter-spacing: var(--font-heading-l-letter-spacing-f6wvtk, -0.015em);
+  font-weight: var(--font-heading-l-weight-xm7ks9, 800);
+  text-align:center;
+}
+
+#root hr{max-width:780px; margin:1rem auto;}
+
+[data-amplify-authenticator] [data-amplify-router] {
+  box-shadow: none !important;
+  border-radius: 6px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-color: #ddd;
+  margin-top: 10rem;
+  border: 1px solid var(--gray);
+}
+
+body h2 {
+  font-size: 1.1rem;
+  text-align: center;
+  min-height: 2rem;
+}
+
+section {
+  animation: jumpIn 1s forwards;
+}
+
+
+button.language {
+  max-width: 95%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid var(--gray);
+  border-radius: 60px;
+  padding: 1rem .5rem;
+  margin: .5rem auto;
+  transition: all .3s;
+  background-color: white;
+}
+
+button.language.disabled {
+  opacity: .5;
+  background-color: var(--bs-gray-300);
+  pointer-events: none;
+}
+
+button.language,
+button.language label {
+  width: 100%;
+  padding-left:.5rem;
+  padding-right:.5rem;
+  cursor: pointer;
+}
+
+button.language.active,
+button.language.active label {
+  cursor: default;
+}
+
+button.language:hover {
+  border: 2px solid var(--blue);
+}
+
+button.language.active {
+  border: 2px solid var(--blue);
+  color: var(--blue);
+}
+
+button.language strong {
+  margin-left: .7rem;  
+}
+
+div.translator {
+  
+}
+
+.translator button {
+  display: flex;
+  width: 100%;
+  height: 350px;
+  padding-top: 50px;
+  justify-content: center;
+  align-items: center;
+  border: 0px;
+  transition: all .15s ease-out;
+  border-radius: 30px;
+  margin-bottom:55px;
+}
+
+
+
+.translator label {
+  height: 40px;
+  transform: translateY(55px);
+  flex: 1;
+  padding: .5rem 0px;
+  width: 90%;
+  background-color: #dfdfdfcc;
+  border-radius: 30px;
+  text-align: center;
+  margin: 0rem auto;
+  z-index: 2;
+  position: relative;
+  pointer-events: none;
+}
+
+.translator label img {
+  margin-top: -3px;
+  margin-right: 8px;
+}
+
+.time_left{font-size:3rem;color:#fff;}
+
+button:not[disabled] {
+  cursor: pointer;
+}
+
+
+button.record:not([disabled]):hover,
+button.play:not([disabled]):hover,
+button.recording:hover,
+button.playing:hover {
+  transform: scale(1.03);
+}
+
+button:hover:active {
+  filter:brightness(.9);
+}
+
+
+button.play,
+button.playing {
+  background-color: var(--blue);
+}
+
+button.playing {
+  animation: glowPlay 1s infinite;
+  border: 3px solid var(--darkblue);
+}
+
+button.record,
+button.recording {
+  background-color: var(--danger);
+}
+
+button.recording {
+  animation: glowRecord 1s infinite;
+  border: 3px solid var(--darkred);
+}
+
+button.recording svg,
+button.recording:hover strong {
+  display: none;
+}
+
+button.recording:hover svg,
+button.recording strong {
+  display: block;
+}
+
+.audio {
+  position: fixed;
+  width: 400px;
+  left: calc(50% - 200px);
+  bottom: 0px;
+}
+
+audio {
+  width: 90%;
+  max-width: 600px;
+  margin: 0 auto;
+  display: block
+}
+
+@keyframes glowRecord {
+  0% {
+    box-shadow: 0px 0px 30px red
+  }
+
+  50% {
+    box-shadow: 0px 0px 0px red
+  }
+
+  100% {
+    box-shadow: 0px 0px 30px red
+  }
+}
+
+@keyframes glowPlay {
+  0% {
+    box-shadow: 0px 0px 30px var(--blue)
+  }
+
+  50% {
+    box-shadow: 0px 0px 0px var(--blue)
+  }
+
+  100% {
+    box-shadow: 0px 0px 30px var(--blue)
+  }
+}
+
+#back {
+  position: absolute;
+  top: 0;
+  height: 100vh;
+  background-color: #ddd;
+  width: 70px;
+  left: -6rem;
+  transition: .25s left ease-out
+}
+
+#back button {
+  background: none;
+  border: 0px;
+  transform: translateY(-.2rem);
+  font-size: 4.5rem;
+  background-color: none;
+  height: 100%;
+  padding-top: 1.5rem;
+  width: 100%;
+  vertical-align: top;
+  display: flex;
+}
+
+#back:hover {
+  background-color: #eee
+}
+
+#back.visible {
+  left: 0px;
+}
+
+/*--------*/
+
+button.playback {
+  border: 0px;
+  transition: all .5s;
+  border-radius: 40px;
+  width: 60px;
+  height: 60px;
+  background-color: #555;
+  z-index: 1;
+  position: relative
+}
+
+.transcription {
+  background-color: #fff;
+  border: 1px solid lightgray;
+  text-align: left;
+  font-family: 'Amazon Ember Mono';
+  font-size: 1.2rem;
+  padding: .8rem 1.7vw;
+  border-radius: 16px;
+  overflow-y: scroll;
+  animation: jumpIn 1s forwards;
+}
+
+
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track-piece {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #CBCBCB;
+  outline: 2px solid transparent;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #909090;
+}
+
+#processStatus {
+  animation: jumpIn 1s forwards
+}
+
+@keyframes jumpIn {
+  0% {
+    transform: translateY(1rem);
+    opacity: 0
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1
+  }
+}
+
+audio {
+  display: none
+}
+
+#sign_out {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+}
+.transcription{
+  min-height:90px;
+  font-size:2rem;
+  border:0px;
+  padding: .4rem;
+  line-height:140%;
+}
+#steps svg{vertical-align: baseline;transform:translateY(2px);margin-left:.45rem;margin-right:.25rem;}
+#simulator {
+  position: absolute;
+  width: 600px;
+  left: calc(50% - 300px);
+  top:0px;
+  text-align: center;
+  display: none;
+  }
