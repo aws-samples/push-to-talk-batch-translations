@@ -5,6 +5,9 @@
 - The frontend is entirely in Amplify React and Typescript 
     - The fe_voice_translator folder holds all of the frontend work
 
+## Architecture 
+
+![Architecture](./static/PushToTalk.png)
 
 ### Getting started command
 - Backend 
