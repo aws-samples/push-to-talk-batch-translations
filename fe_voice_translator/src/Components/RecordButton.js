@@ -30,7 +30,8 @@ const RecordButton = ({step, start, stop}) => {
         html = <button aria-label="Record Audio" className="circle mx-auto record" onClick={handleStart}><MicFill color="#ffffff" size={40} /></button>
     }
     else if (step === 1){ //recording
-        html = <button aria-label="Stop Recording" className="circle mx-auto recording" onClick={handleStop}><Timer
+        html = <button aria-label="Stop Recording" className="circle mx-auto recording" onClick={handleStop}>
+            <Timer
         time={time}
         timerOn={timerOn}
         handleStart={handleStart}

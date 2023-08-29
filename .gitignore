@@ -85,3 +85,4 @@ fe_voice_translator/amplify-gradle-config.json
 fe_voice_translator/amplifytools.xcconfig
 fe_voice_translator/.secret-*
 fe_voice_translator/**.sample
+fe_voice_translator/src/aws-exports.js
