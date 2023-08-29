@@ -64,7 +64,7 @@ export function getTranscribeLanguageCode(sourceLanguage: string): TranscribeLan
 }
 
 export const handleVoiceId = (language: string): VoiceId => {
-  let voiceId = VoiceId.Matthew;
+  let voiceId: string = VoiceId.Matthew;
 
   if (language === 'pl') {
     voiceId = VoiceId.Maja;

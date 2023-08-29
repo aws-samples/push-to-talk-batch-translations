@@ -144,11 +144,12 @@ const App = ({showIntro}) => {
                     key,
                     fileBlob,
                     {
-                        contentType: 'audio/webm',
+                        contentType: 'audio/wav',
                         customPrefix: {
                             public: 'raw_input/',
                         }
                     })
+                console.log("Uploaded file: ", key)
                 await API.graphql(
                     graphqlOperation(
                         createTranslationRecordings,
@@ -227,10 +228,10 @@ const App = ({showIntro}) => {
         setTargetLanguage();
     }
 
-
+    // https://tnovau.github.io/react-circle-flags/gallery#gallery
     const inputLanguages = [
         {flag: "ae", code: "ar", name: "Arabic (MSA)"},
-        {flag: "af", code: "af", name: "Afrikaans"},
+        {flag: "za", code: "af", name: "Afrikaans"},
         {flag: "cn", code: "zh", name: "Mandarin"},
         {flag: "us", code: "en", name: "English, US"},
         {flag: "jp", code: "ja", name: "Japanese"},
@@ -242,7 +243,7 @@ const App = ({showIntro}) => {
     ];
     const outputLanguages = [
         {flag: "ae", code: "ar", name: "Arabic (MSA)"},
-        {flag: "af", code: "af", name: "Afrikaans"},
+        {flag: "za", code: "af", name: "Afrikaans"},
         {flag: "cn", code: "zh", name: "Mandarin"},
         {flag: "us", code: "en", name: "English, US"},
         {flag: "jp", code: "ja", name: "Japanese"},
