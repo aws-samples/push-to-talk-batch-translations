@@ -2,12 +2,22 @@ const { awscdk } = require('projen');
 const project = new awscdk.AwsCdkTypeScriptApp({
   cdkVersion: '2.1.0',
   defaultReleaseBranch: 'main',
-  name: 'translation-walkie-talkie',
+  name: 'push-to-talk-batch-translations',
 
   // deps: [],                /* Runtime dependencies of this module. */
   // description: undefined,  /* The description is just a string that helps people understand the purpose of the package. */
   // devDeps: [],             /* Build dependencies for this module. */
   // packageName: undefined,  /* The "name" in package.json. */
+  deps: [
+    '@aws-cdk/aws-appsync-alpha',
+    'dotenv',
+    '@aws-sdk/client-transcribe',
+    '@aws-sdk/client-polly',
+    '@aws-sdk/client-sfn',
+    'node-fetch',
+    '@aws-sdk/client-translate',
+    '@aws-sdk/client-s3',
+  ],
   gitignore: [
     'fe_voice_translator/node_modules',
     'fe_voice_translator/build',
@@ -44,6 +54,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'fe_voice_translator/src/aws-exports.js',
     'fe_voice_translator/src/awsconfiguration.json',
     '.idea',
+    '.env',
   ],
 });
 project.synth();
