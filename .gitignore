@@ -65,6 +65,7 @@ fe_voice_translator/**.sample
 fe_voice_translator/src/aws-exports.js
 fe_voice_translator/src/awsconfiguration.json
 .idea
+.env
 !/.projenrc.js
 /test-reports/
 junit.xml
