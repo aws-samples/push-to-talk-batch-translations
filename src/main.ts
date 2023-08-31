@@ -3,7 +3,7 @@ import {
   GraphqlApi,
   MappingTemplate,
   FieldLogLevel,
-  Schema,
+  SchemaFile,
 } from '@aws-cdk/aws-appsync-alpha';
 import { AuthorizationType } from '@aws-cdk/aws-appsync-alpha/lib/graphqlapi';
 import { App, CfnOutput, Duration, Expiration, Stack, StackProps } from 'aws-cdk-lib';
@@ -286,7 +286,7 @@ export class MyStack extends Stack {
       this,
       'AppSyncLiveTranslationApi',
       {
-        schema: Schema.fromAsset(path.join(__dirname, 'graphql/schema.graphql')),
+        schema: SchemaFile.fromAsset(path.join(__dirname, 'graphql/schema.graphql')),
         name: 'AppSync2StepFunction-API',
         authorizationConfig: {
           defaultAuthorization: {
@@ -319,7 +319,7 @@ export class MyStack extends Stack {
       },
     );
 
-    translationRecordingDataSource.createResolver({
+    translationRecordingDataSource.createResolver('getTranslationRecordings', {
       typeName: 'Query',
       fieldName: 'getTranslationRecordings',
       requestMappingTemplate: MappingTemplate.fromFile(
@@ -330,7 +330,7 @@ export class MyStack extends Stack {
       ),
     });
 
-    translationRecordingDataSource.createResolver({
+    translationRecordingDataSource.createResolver('listTranslationRecordings', {
       typeName: 'Query',
       fieldName: 'listTranslationRecordings',
       requestMappingTemplate: MappingTemplate.fromFile(
@@ -341,7 +341,7 @@ export class MyStack extends Stack {
       ),
     });
 
-    translationRecordingDataSource.createResolver({
+    translationRecordingDataSource.createResolver('createTranslationRecordings', {
       typeName: 'Mutation',
       fieldName: 'createTranslationRecordings',
       requestMappingTemplate: MappingTemplate.fromFile(
@@ -352,7 +352,7 @@ export class MyStack extends Stack {
       ),
     });
 
-    translationRecordingDataSource.createResolver({
+    translationRecordingDataSource.createResolver('updateTranslationRecordings', {
       typeName: 'Mutation',
       fieldName: 'updateTranslationRecordings',
       requestMappingTemplate: MappingTemplate.fromFile(
@@ -364,7 +364,7 @@ export class MyStack extends Stack {
       ),
     });
 
-    startTranslationSfnDataSource.createResolver(
+    startTranslationSfnDataSource.createResolver( 'startTranslationSfn',
       {
         typeName: 'Mutation',
         fieldName: 'startTranslationSfn',
