@@ -1,0 +1,1599 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot 1`] = `
+{
+  "Mappings": {
+    "ServiceprincipalMap": {
+      "af-south-1": {
+        "states": "states.af-south-1.amazonaws.com",
+      },
+      "ap-east-1": {
+        "states": "states.ap-east-1.amazonaws.com",
+      },
+      "ap-northeast-1": {
+        "states": "states.ap-northeast-1.amazonaws.com",
+      },
+      "ap-northeast-2": {
+        "states": "states.ap-northeast-2.amazonaws.com",
+      },
+      "ap-northeast-3": {
+        "states": "states.ap-northeast-3.amazonaws.com",
+      },
+      "ap-south-1": {
+        "states": "states.ap-south-1.amazonaws.com",
+      },
+      "ap-south-2": {
+        "states": "states.ap-south-2.amazonaws.com",
+      },
+      "ap-southeast-1": {
+        "states": "states.ap-southeast-1.amazonaws.com",
+      },
+      "ap-southeast-2": {
+        "states": "states.ap-southeast-2.amazonaws.com",
+      },
+      "ap-southeast-3": {
+        "states": "states.ap-southeast-3.amazonaws.com",
+      },
+      "ca-central-1": {
+        "states": "states.ca-central-1.amazonaws.com",
+      },
+      "cn-north-1": {
+        "states": "states.cn-north-1.amazonaws.com",
+      },
+      "cn-northwest-1": {
+        "states": "states.cn-northwest-1.amazonaws.com",
+      },
+      "eu-central-1": {
+        "states": "states.eu-central-1.amazonaws.com",
+      },
+      "eu-central-2": {
+        "states": "states.eu-central-2.amazonaws.com",
+      },
+      "eu-north-1": {
+        "states": "states.eu-north-1.amazonaws.com",
+      },
+      "eu-south-1": {
+        "states": "states.eu-south-1.amazonaws.com",
+      },
+      "eu-south-2": {
+        "states": "states.eu-south-2.amazonaws.com",
+      },
+      "eu-west-1": {
+        "states": "states.eu-west-1.amazonaws.com",
+      },
+      "eu-west-2": {
+        "states": "states.eu-west-2.amazonaws.com",
+      },
+      "eu-west-3": {
+        "states": "states.eu-west-3.amazonaws.com",
+      },
+      "me-central-1": {
+        "states": "states.me-central-1.amazonaws.com",
+      },
+      "me-south-1": {
+        "states": "states.me-south-1.amazonaws.com",
+      },
+      "sa-east-1": {
+        "states": "states.sa-east-1.amazonaws.com",
+      },
+      "us-east-1": {
+        "states": "states.us-east-1.amazonaws.com",
+      },
+      "us-east-2": {
+        "states": "states.us-east-2.amazonaws.com",
+      },
+      "us-gov-east-1": {
+        "states": "states.us-gov-east-1.amazonaws.com",
+      },
+      "us-gov-west-1": {
+        "states": "states.us-gov-west-1.amazonaws.com",
+      },
+      "us-iso-east-1": {
+        "states": "states.amazonaws.com",
+      },
+      "us-iso-west-1": {
+        "states": "states.amazonaws.com",
+      },
+      "us-isob-east-1": {
+        "states": "states.amazonaws.com",
+      },
+      "us-west-1": {
+        "states": "states.us-west-1.amazonaws.com",
+      },
+      "us-west-2": {
+        "states": "states.us-west-2.amazonaws.com",
+      },
+    },
+  },
+  "Outputs": {
+    "CfnDistribution": {
+      "Description": "Domain name for our cloud front distribution",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Fn::GetAtt": [
+                "CfDistribution31DD92CC",
+                "DomainName",
+              ],
+            },
+            "/voice-translator.html",
+          ],
+        ],
+      },
+    },
+    "IdentityPoolIdOutput": {
+      "Description": "IdentityPoolId",
+      "Value": {
+        "Ref": "CognitoIdentityPool",
+      },
+    },
+    "VoiceTranslatorBucketOutput": {
+      "Description": "VoiceTranslator S3 Bucket",
+      "Value": {
+        "Ref": "VoiceTranslatorBucket49A811E7",
+      },
+    },
+    "VoiceTranslatorLambdaOutput": {
+      "Description": "VoiceTranslator Lambda",
+      "Value": {
+        "Fn::GetAtt": [
+          "VoiceTranslatorLambdaA012ED87",
+          "Arn",
+        ],
+      },
+    },
+    "graphqlendpoint": {
+      "Description": "graphql endpoint",
+      "Value": "",
+    },
+    "startSfnLambda": {
+      "Description": "startSfnLambda Lambda",
+      "Value": {
+        "Fn::GetAtt": [
+          "startTranslationSfnLambdaB9DE9221",
+          "Arn",
+        ],
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "AppSyncLiveTranslationApiApiLogsRole429085D0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "appsync.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AppSyncLiveTranslationApiAppSyncAPIKeyApiKeyC205B157": {
+      "DependsOn": [
+        "AppSyncLiveTranslationApiSchema0FA2790C",
+      ],
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "Description": "API Key for AppSyncLiveTranslationApi",
+        "Expires": 1729832318,
+      },
+      "Type": "AWS::AppSync::ApiKey",
+    },
+    "AppSyncLiveTranslationApiB209B05A": {
+      "Properties": {
+        "AuthenticationType": "API_KEY",
+        "LogConfig": {
+          "CloudWatchLogsRoleArn": {
+            "Fn::GetAtt": [
+              "AppSyncLiveTranslationApiApiLogsRole429085D0",
+              "Arn",
+            ],
+          },
+          "FieldLogLevel": "ALL",
+        },
+        "Name": "AppSync2StepFunction-API",
+      },
+      "Type": "AWS::AppSync::GraphQLApi",
+    },
+    "AppSyncLiveTranslationApiSchema0FA2790C": {
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "Definition": "input CreateTranslationRecordingsInput {
+	jobId: ID!
+	bucket: String
+	key: String
+	sourceLanguage: String
+	targetLanguage: String
+}
+
+input DeleteTranslationRecordingsInput {
+	jobId: ID!
+}
+
+type Mutation {
+	startTranslationSfn(input: CreateTranslationRecordingsInput!): TranslationRecordings
+	createTranslationRecordings(input: CreateTranslationRecordingsInput!): TranslationRecordings
+	updateTranslationRecordings(input: UpdateTranslationRecordingsInput!): TranslationRecordings
+	deleteTranslationRecordings(input: DeleteTranslationRecordingsInput!): TranslationRecordings
+}
+
+type Query {
+	getTranslationRecordings(jobId: ID!): TranslationRecordings
+	listTranslationRecordings(filter: TableTranslationRecordingsFilterInput, limit: Int, nextToken: String): TranslationRecordingsConnection
+}
+
+type Subscription {
+	onCreateTranslationRecordings(
+		jobId: ID,
+		bucket: String,
+		key: String,
+		sourceLanguage: String,
+		targetLanguage: String
+	): TranslationRecordings
+		@aws_subscribe(mutations: ["createTranslationRecordings"])
+	onUpdateTranslationRecordings(
+		jobId: ID,
+		bucket: String,
+		key: String,
+		sourceLanguage: String,
+		targetLanguage: String
+	): TranslationRecordings
+		@aws_subscribe(mutations: ["updateTranslationRecordings"])
+	onDeleteTranslationRecordings(
+		jobId: ID,
+		bucket: String,
+		key: String,
+		sourceLanguage: String,
+		targetLanguage: String
+	): TranslationRecordings
+		@aws_subscribe(mutations: ["deleteTranslationRecordings"])
+}
+
+input TableBooleanFilterInput {
+	ne: Boolean
+	eq: Boolean
+}
+
+input TableFloatFilterInput {
+	ne: Float
+	eq: Float
+	le: Float
+	lt: Float
+	ge: Float
+	gt: Float
+	contains: Float
+	notContains: Float
+	between: [Float]
+}
+
+input TableIDFilterInput {
+	ne: ID
+	eq: ID
+	le: ID
+	lt: ID
+	ge: ID
+	gt: ID
+	contains: ID
+	notContains: ID
+	between: [ID]
+	beginsWith: ID
+}
+
+input TableIntFilterInput {
+	ne: Int
+	eq: Int
+	le: Int
+	lt: Int
+	ge: Int
+	gt: Int
+	contains: Int
+	notContains: Int
+	between: [Int]
+}
+
+input TableStringFilterInput {
+	ne: String
+	eq: String
+	le: String
+	lt: String
+	ge: String
+	gt: String
+	contains: String
+	notContains: String
+	between: [String]
+	beginsWith: String
+}
+
+input TableTranslationRecordingsFilterInput {
+	jobId: TableIDFilterInput
+	bucket: TableStringFilterInput
+	key: TableStringFilterInput
+	sourceLanguage: TableStringFilterInput
+	targetLanguage: TableStringFilterInput
+}
+
+type TranslationRecordings {
+	bucket: String
+	key: String
+	sourceLanguage: String
+	targetLanguage: String
+	transcription: String
+	translatedText: String
+	pollyLocation: String
+}
+
+type TranslationRecordingsConnection {
+	items: [TranslationRecordings]
+	nextToken: String
+}
+
+input UpdateTranslationRecordingsInput {
+	jobId: ID!
+	bucket: String
+	key: String
+	sourceLanguage: String
+	targetLanguage: String
+	transcription: String
+	translatedText: String
+	pollyLocation: String
+}",
+      },
+      "Type": "AWS::AppSync::GraphQLSchema",
+    },
+    "AppSyncLiveTranslationApicreateTranslationRecordingsA72DC0A9": {
+      "DependsOn": [
+        "AppSyncLiveTranslationApiSchema0FA2790C",
+        "AppSyncLiveTranslationApitranslationRecordingDataSourceC1C85303",
+      ],
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "DataSourceName": "translationRecordingDataSource",
+        "FieldName": "createTranslationRecordings",
+        "Kind": "UNIT",
+        "RequestMappingTemplate": "{
+  "version": "2017-02-28",
+  "operation": "PutItem",
+  "key": {
+    "jobId": $util.dynamodb.toDynamoDBJson($ctx.args.input.jobId),
+  },
+  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input),
+  "condition": {
+    "expression": "attribute_not_exists(#jobId)",
+    "expressionNames": {
+      "#jobId": "jobId",
+    },
+  },
+}",
+        "ResponseMappingTemplate": "$util.toJson($context.result)",
+        "TypeName": "Mutation",
+      },
+      "Type": "AWS::AppSync::Resolver",
+    },
+    "AppSyncLiveTranslationApigetTranslationRecordingsDAA28A1A": {
+      "DependsOn": [
+        "AppSyncLiveTranslationApiSchema0FA2790C",
+        "AppSyncLiveTranslationApitranslationRecordingDataSourceC1C85303",
+      ],
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "DataSourceName": "translationRecordingDataSource",
+        "FieldName": "getTranslationRecordings",
+        "Kind": "UNIT",
+        "RequestMappingTemplate": "{
+  "version": "2017-02-28",
+  "operation": "GetItem",
+  "key": {
+    "jobId": $util.dynamodb.toDynamoDBJson($ctx.args.jobId),
+  },
+}",
+        "ResponseMappingTemplate": "{
+  "version": "2017-02-28",
+  "operation": "GetItem",
+  "key": {
+    "jobId": $util.dynamodb.toDynamoDBJson($ctx.args.jobId),
+  },
+}",
+        "TypeName": "Query",
+      },
+      "Type": "AWS::AppSync::Resolver",
+    },
+    "AppSyncLiveTranslationApilistTranslationRecordings3A70F1DC": {
+      "DependsOn": [
+        "AppSyncLiveTranslationApiSchema0FA2790C",
+        "AppSyncLiveTranslationApitranslationRecordingDataSourceC1C85303",
+      ],
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "DataSourceName": "translationRecordingDataSource",
+        "FieldName": "listTranslationRecordings",
+        "Kind": "UNIT",
+        "RequestMappingTemplate": "{
+  "version": "2017-02-28",
+  "operation": "Scan",
+  "filter": #if($context.args.filter) $util.transform.toDynamoDBFilterExpression($ctx.args.filter) #else null #end,
+  "limit": $util.defaultIfNull($ctx.args.limit, 20),
+  "nextToken": $util.toJson($util.defaultIfNullOrEmpty($ctx.args.nextToken, null)),
+}",
+        "ResponseMappingTemplate": "{
+  "version": "2017-02-28",
+  "operation": "Scan",
+  "filter": #if($context.args.filter) $util.transform.toDynamoDBFilterExpression($ctx.args.filter) #else null #end,
+  "limit": $util.defaultIfNull($ctx.args.limit, 20),
+  "nextToken": $util.toJson($util.defaultIfNullOrEmpty($ctx.args.nextToken, null)),
+}",
+        "TypeName": "Query",
+      },
+      "Type": "AWS::AppSync::Resolver",
+    },
+    "AppSyncLiveTranslationApistartTranslationSfnDataSource910EC78D": {
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "Description": "startTranslationSfnDataSource desc",
+        "LambdaConfig": {
+          "LambdaFunctionArn": {
+            "Fn::GetAtt": [
+              "startTranslationSfnLambdaB9DE9221",
+              "Arn",
+            ],
+          },
+        },
+        "Name": "startTranslationSfnDataSource",
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApistartTranslationSfnDataSourceServiceRole1E69BD83",
+            "Arn",
+          ],
+        },
+        "Type": "AWS_LAMBDA",
+      },
+      "Type": "AWS::AppSync::DataSource",
+    },
+    "AppSyncLiveTranslationApistartTranslationSfnDataSourceServiceRole1E69BD83": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "appsync.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AppSyncLiveTranslationApistartTranslationSfnDataSourceServiceRoleDefaultPolicyA668101E": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "startTranslationSfnLambdaB9DE9221",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "startTranslationSfnLambdaB9DE9221",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AppSyncLiveTranslationApistartTranslationSfnDataSourceServiceRoleDefaultPolicyA668101E",
+        "Roles": [
+          {
+            "Ref": "AppSyncLiveTranslationApistartTranslationSfnDataSourceServiceRole1E69BD83",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AppSyncLiveTranslationApistartTranslationSfnEC0D10CD": {
+      "DependsOn": [
+        "AppSyncLiveTranslationApiSchema0FA2790C",
+        "AppSyncLiveTranslationApistartTranslationSfnDataSource910EC78D",
+      ],
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "DataSourceName": "startTranslationSfnDataSource",
+        "FieldName": "startTranslationSfn",
+        "Kind": "UNIT",
+        "TypeName": "Mutation",
+      },
+      "Type": "AWS::AppSync::Resolver",
+    },
+    "AppSyncLiveTranslationApitranslationRecordingDataSourceC1C85303": {
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "DynamoDBConfig": {
+          "AwsRegion": {
+            "Ref": "AWS::Region",
+          },
+          "TableName": {
+            "Ref": "TranslationRecordingTable2B79E8D3",
+          },
+        },
+        "Name": "translationRecordingDataSource",
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApitranslationRecordingDataSourceServiceRole3C6D4173",
+            "Arn",
+          ],
+        },
+        "Type": "AMAZON_DYNAMODB",
+      },
+      "Type": "AWS::AppSync::DataSource",
+    },
+    "AppSyncLiveTranslationApitranslationRecordingDataSourceServiceRole3C6D4173": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "appsync.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AppSyncLiveTranslationApitranslationRecordingDataSourceServiceRoleDefaultPolicyBAA78805": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TranslationRecordingTable2B79E8D3",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AppSyncLiveTranslationApitranslationRecordingDataSourceServiceRoleDefaultPolicyBAA78805",
+        "Roles": [
+          {
+            "Ref": "AppSyncLiveTranslationApitranslationRecordingDataSourceServiceRole3C6D4173",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AppSyncLiveTranslationApiupdateTranslationRecordings6782D0CC": {
+      "DependsOn": [
+        "AppSyncLiveTranslationApiSchema0FA2790C",
+        "AppSyncLiveTranslationApitranslationRecordingDataSourceC1C85303",
+      ],
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "AppSyncLiveTranslationApiB209B05A",
+            "ApiId",
+          ],
+        },
+        "DataSourceName": "translationRecordingDataSource",
+        "FieldName": "updateTranslationRecordings",
+        "Kind": "UNIT",
+        "RequestMappingTemplate": "{
+  "version": "2017-02-28",
+  "operation": "UpdateItem",
+  "key": {
+    "jobId": $util.dynamodb.toDynamoDBJson($ctx.args.input.jobId),
+  },
+
+  ## Set up some space to keep track of things we're updating **
+  #set( $expNames  = {} )
+  #set( $expValues = {} )
+  #set( $expSet = {} )
+  #set( $expAdd = {} )
+  #set( $expRemove = [] )
+
+  ## Iterate through each argument, skipping keys **
+  #foreach( $entry in $util.map.copyAndRemoveAllKeys($ctx.args.input, ["jobId"]).entrySet() )
+    #if( $util.isNull($entry.value) )
+      ## If the argument is set to "null", then remove that attribute from the item in DynamoDB **
+
+      #set( $discard = \${expRemove.add("#\${entry.key}")} )
+      $!{expNames.put("#\${entry.key}", "\${entry.key}")}
+    #else
+      ## Otherwise set (or update) the attribute on the item in DynamoDB **
+
+      $!{expSet.put("#\${entry.key}", ":\${entry.key}")}
+      $!{expNames.put("#\${entry.key}", "\${entry.key}")}
+      $!{expValues.put(":\${entry.key}", $util.dynamodb.toDynamoDB($entry.value))}
+    #end
+  #end
+
+  ## Start building the update expression, starting with attributes we're going to SET **
+  #set( $expression = "" )
+  #if( !\${expSet.isEmpty()} )
+    #set( $expression = "SET" )
+    #foreach( $entry in $expSet.entrySet() )
+      #set( $expression = "\${expression} \${entry.key} = \${entry.value}" )
+      #if ( $foreach.hasNext )
+        #set( $expression = "\${expression}," )
+      #end
+    #end
+  #end
+
+  ## Continue building the update expression, adding attributes we're going to ADD **
+  #if( !\${expAdd.isEmpty()} )
+    #set( $expression = "\${expression} ADD" )
+    #foreach( $entry in $expAdd.entrySet() )
+      #set( $expression = "\${expression} \${entry.key} \${entry.value}" )
+      #if ( $foreach.hasNext )
+        #set( $expression = "\${expression}," )
+      #end
+    #end
+  #end
+
+  ## Continue building the update expression, adding attributes we're going to REMOVE **
+  #if( !\${expRemove.isEmpty()} )
+    #set( $expression = "\${expression} REMOVE" )
+
+    #foreach( $entry in $expRemove )
+      #set( $expression = "\${expression} \${entry}" )
+      #if ( $foreach.hasNext )
+        #set( $expression = "\${expression}," )
+      #end
+    #end
+  #end
+
+  ## Finally, write the update expression into the document, along with any expressionNames and expressionValues **
+  "update": {
+    "expression": "\${expression}",
+    #if( !\${expNames.isEmpty()} )
+      "expressionNames": $utils.toJson($expNames),
+    #end
+    #if( !\${expValues.isEmpty()} )
+      "expressionValues": $utils.toJson($expValues),
+    #end
+  },
+
+  "condition": {
+    "expression": "attribute_exists(#jobId)",
+    "expressionNames": {
+      "#jobId": "jobId",
+    },
+  }
+}
+",
+        "ResponseMappingTemplate": "$util.toJson($context.result)",
+        "TypeName": "Mutation",
+      },
+      "Type": "AWS::AppSync::Resolver",
+    },
+    "CfDistribution31DD92CC": {
+      "Properties": {
+        "DistributionConfig": {
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+            ],
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+            ],
+            "Compress": false,
+            "TargetOriginId": "testCfDistributionOrigin1C552EF69",
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "HttpVersion": "http1.1",
+          "IPV6Enabled": false,
+          "Origins": [
+            {
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "http-only",
+                "OriginSSLProtocols": [
+                  "TLSv1.2",
+                ],
+              },
+              "DomainName": {
+                "Fn::Select": [
+                  2,
+                  {
+                    "Fn::Split": [
+                      "/",
+                      {
+                        "Fn::GetAtt": [
+                          "VoiceTranslatorBucket49A811E7",
+                          "WebsiteURL",
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              "Id": "testCfDistributionOrigin1C552EF69",
+            },
+          ],
+          "PriceClass": "PriceClass_All",
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "CognitoIdentityPool": {
+      "Properties": {
+        "AllowUnauthenticatedIdentities": true,
+      },
+      "Type": "AWS::Cognito::IdentityPool",
+    },
+    "CognitoUnAuthorizedRole0DA19B8E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "lambda:InvokeFunction",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "VoiceTranslatorLambdaA012ED87",
+                      "Arn",
+                    ],
+                  },
+                },
+                {
+                  "Action": "s3:PutObject",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "VoiceTranslatorBucket49A811E7",
+                            "Arn",
+                          ],
+                        },
+                        "/*",
+                      ],
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "CognitoUnauthorizedPolicy",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityPoolRoleMapping": {
+      "Properties": {
+        "IdentityPoolId": {
+          "Ref": "CognitoIdentityPool",
+        },
+        "Roles": {
+          "unauthenticated": {
+            "Fn::GetAtt": [
+              "CognitoUnAuthorizedRole0DA19B8E",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Cognito::IdentityPoolRoleAttachment",
+    },
+    "StepFunction1F935F84": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "StepFunctionRoleDefaultPolicyF0CC7D9B",
+        "StepFunctionRoleEFA7D72E",
+      ],
+      "Properties": {
+        "DefinitionString": {
+          "Fn::Join": [
+            "",
+            [
+              "{"StartAt":"transcribeLambda","States":{"transcribeLambda":{"Next":"Get Transcribe Job Status","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","OutputPath":"$.Payload","Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":states:::lambda:invoke","Parameters":{"FunctionName":"",
+              {
+                "Fn::GetAtt": [
+                  "VoiceTranslatorLambdaA012ED87",
+                  "Arn",
+                ],
+              },
+              "","Payload.$":"$"}},"Get Transcribe Job Status":{"Next":"Job Complete?","Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","OutputPath":"$.Payload","Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":states:::lambda:invoke","Parameters":{"FunctionName":"",
+              {
+                "Fn::GetAtt": [
+                  "getTranscribeStatusLambdaAFDE7C84",
+                  "Arn",
+                ],
+              },
+              "","Payload.$":"$"}},"Job Complete?":{"Type":"Choice","Choices":[{"Variable":"$.status","StringEquals":"FAILED","Next":"Job Failed"},{"Variable":"$.status","StringEquals":"COMPLETED","Next":"Start Translate -- Polly Job Status"},{"Variable":"$.status","StringEquals":"IN_PROGRESS","Next":"Get Transcribe Job Status"}],"Default":"Job unknownState"},"Job unknownState":{"Type":"Fail","Error":"Transcription returned unknownState","Cause":"AWS Transcription Job Failed"},"Job Failed":{"Type":"Fail","Error":"Transcription returned FAILED","Cause":"AWS Transcription Job Failed"},"Start Translate -- Polly Job Status":{"End":true,"Retry":[{"ErrorEquals":["Lambda.ClientExecutionTimeoutException","Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","OutputPath":"$.Payload","Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":states:::lambda:invoke","Parameters":{"FunctionName":"",
+              {
+                "Fn::GetAtt": [
+                  "translatePollyLambda5F3C1E78",
+                  "Arn",
+                ],
+              },
+              "","Payload.$":"$"}}},"TimeoutSeconds":300}",
+            ],
+          ],
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "StepFunctionRoleEFA7D72E",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::StepFunctions::StateMachine",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "StepFunctionRoleDefaultPolicyF0CC7D9B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoiceTranslatorLambdaA012ED87",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoiceTranslatorLambdaA012ED87",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "getTranscribeStatusLambdaAFDE7C84",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "getTranscribeStatusLambdaAFDE7C84",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "translatePollyLambda5F3C1E78",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "translatePollyLambda5F3C1E78",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "StepFunctionRoleDefaultPolicyF0CC7D9B",
+        "Roles": [
+          {
+            "Ref": "StepFunctionRoleEFA7D72E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "StepFunctionRoleEFA7D72E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::FindInMap": [
+                    "ServiceprincipalMap",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "states",
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TranslatePollyLambdaRole178A4BEB": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "translate:TranslateText",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "TranslateAccess",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "VoiceTranslatorBucket49A811E7",
+                            "Arn",
+                          ],
+                        },
+                        "/*",
+                      ],
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "S3Access",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "s3:GetBucketLocation",
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:s3:::*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "BucketLocation",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "polly:SynthesizeSpeech",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "PollyAccess",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:logs:*:*:*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "CloudWatchPolicy",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TranslationRecordingTable2B79E8D3": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "jobId",
+            "AttributeType": "S",
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "jobId",
+            "KeyType": "HASH",
+          },
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5,
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "VoiceTranslatorBucket49A811E7": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "*",
+              ],
+              "AllowedMethods": [
+                "GET",
+                "PUT",
+                "POST",
+                "HEAD",
+              ],
+              "AllowedOrigins": [
+                "*",
+              ],
+              "Id": "myCORSRuleId1",
+              "MaxAge": 3600,
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "WebsiteConfiguration": {
+          "IndexDocument": "voice-translator.html",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "VoiceTranslatorLambdaA012ED87": {
+      "DependsOn": [
+        "VoiceTranslatorLambdaRoleB3411A84",
+      ],
+      "Properties": {
+        "Architectures": [
+          "arm64",
+        ],
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "fba9dce783472faf4c45c36f684bc5895d4e8367946a5411fb846f9bda8684be.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "VoiceTranslatorLambdaRoleB3411A84",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "VoiceTranslatorLambdaRoleB3411A84": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "transcribe:StartStreamTranscription",
+                    "transcribe:StartTranscriptionJob",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "TranscribeAccess",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:ListBucket",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "VoiceTranslatorBucket49A811E7",
+                            "Arn",
+                          ],
+                        },
+                        "/*",
+                      ],
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "S3Access",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:logs:*:*:*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "CloudWatchPolicy",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "getTranscribeStatusLambdaAFDE7C84": {
+      "DependsOn": [
+        "getTranscribeStatusRole46C6940C",
+      ],
+      "Properties": {
+        "Architectures": [
+          "arm64",
+        ],
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "2291e736113121f23b76ee03f95c6e622f4c184d22f10c8a2b751b857da7bbce.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "getTranscribeStatusRole46C6940C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "getTranscribeStatusRole46C6940C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "transcribe:GetTranscriptionJob",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "TranscribeAccess",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:logs:*:*:*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "CloudWatchPolicy",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "startSfnRole051B5CB3": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "states:StartExecution",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Ref": "StepFunction1F935F84",
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "SfnStart",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:logs:*:*:*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "CloudWatchPolicy",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "startTranslationSfnLambdaB9DE9221": {
+      "DependsOn": [
+        "startSfnRole051B5CB3",
+      ],
+      "Properties": {
+        "Architectures": [
+          "arm64",
+        ],
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "e9cb0d03f9afca5c0233a107408d558087f286456fcc1a6724de3a422438d626.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+            "REGION": "us-east-1",
+            "STATE_MACHINE_ARN": {
+              "Ref": "StepFunction1F935F84",
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "startSfnRole051B5CB3",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "translatePollyLambda5F3C1E78": {
+      "DependsOn": [
+        "TranslatePollyLambdaRole178A4BEB",
+      ],
+      "Properties": {
+        "Architectures": [
+          "arm64",
+        ],
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "f66b1e9ca87fc8ac94589be54d10dd0b7a5ef1d9b1e472f04ebdf1621e7ee97d.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "API_GRAPHQLAPIENDPOINT": "",
+            "API_GRAPHQLAPIKEY": "",
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+            "REGION": "us-east-1",
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "TranslatePollyLambdaRole178A4BEB",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
