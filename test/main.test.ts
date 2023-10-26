@@ -7,5 +7,6 @@ test('Snapshot', () => {
   const stack = new MyStack(app, 'test');
 
   const template = Template.fromStack(stack);
+  //TODO: Ignore the "Expires"
   expect(template.toJSON()).toMatchSnapshot();
 });
