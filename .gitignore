@@ -86,3 +86,7 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
+.idea/.gitignore
+.idea/.aws.xml
+.idea/translation-walkie-talkie.iml
+/.idea/*
