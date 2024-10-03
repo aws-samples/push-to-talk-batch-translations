@@ -5,20 +5,49 @@
 - The frontend is entirely in Amplify React and Typescript 
     - The fe_voice_translator folder holds all of the frontend work
 
+- Please copy the ``.env.example`` file to create a new ``.env`` file, and update it according to your configuration.
+
 ## Architecture 
 
 ![Architecture](./static/PushToTalk.png)
 
 ### Getting started command
-- Backend 
+#### Backend 
   - ``yarn install``
   - ``yarn build``
   - ``yarn synth; yarn deploy``
 
-- Frontend
-  - You will need to intiate your own Amplify project in your own AWS account
-  - cd fe_voice_translator
-  - ```npm run start```
+- If profile is different:
+```bash
+projen deploy --all --profile <your profile> --region <your region>
+````
+
+#### Frontend
+- You will need to **initialize** your own Amplify project in your AWS account.
+- Navigate to the frontend directory:
+  ```bash
+  cd <your-frontend-directory>
+  ```
+
+- If the Amplify project already exists, run
+  ```bash
+  amplify pull
+  ```
+
+- If the Amplify project doesn't exist, run
+  ```bash
+  amplify init
+  ```
+- To connect Amplify with CDK, run the following commands:
+```bash
+amplify import auth
+amplify import storage
+  ```
+
+- Please copy the ``.env.example`` file to create a new ``.env`` file, and update it according to your configuration.
+
+- Start the frontend:
+  ```npm run start```
 
 
 ## Security

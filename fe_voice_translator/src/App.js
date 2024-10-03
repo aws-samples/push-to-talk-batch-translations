@@ -21,7 +21,25 @@ import LanguageChip from './Components/LanguageChip';
 import Transcription from './Components/Transcription';
 import StatusBoard from './Components/StatusBoard';
 
-Amplify.configure(aws_exports);
+const endpoint = process.env.REACT_APP_GRAPHQLAPIENDPOINT;
+const apiKey = process.env.REACT_APP_GRAPHQLAPIKEY;
+const region = process.env.REACT_APP_REGION;
+
+const aws_exports_update = { ...aws_exports }
+if(!aws_exports.aws_appsync_graphqlEndpoint){
+    aws_exports_update["aws_appsync_graphqlEndpoint"] = endpoint;
+}
+if(!aws_exports.aws_appsync_apiKey){
+    aws_exports_update["aws_appsync_apiKey"] = apiKey;
+}
+if(!aws_exports.aws_appsync_region){
+    aws_exports_update["aws_appsync_region"] = region;
+}
+if(!aws_exports.aws_appsync_authenticationType){
+    aws_exports_update["aws_appsync_authenticationType"] = "API_KEY";
+}
+
+Amplify.configure(aws_exports_update);
 
 const bucket = aws_exports.aws_user_files_s3_bucket || 'amplify-audiotoawss3-dev-133151-deployment';
 

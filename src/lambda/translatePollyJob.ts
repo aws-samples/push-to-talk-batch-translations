@@ -94,15 +94,24 @@ async function getTranscriptFile(bucket: string, inputKey: string): Promise<stri
     const transcriptRaw = await transcriptResponse?.Body?.transformToString('utf-8') || '';
     console.log(transcriptRaw, 'transcriptRaw' );
 
-    const transcript = JSON.parse(transcriptRaw)?.results.transcripts[0].transcript;
+    const transcriptData = JSON.parse(transcriptRaw);
+
+    // Validate if transcript exists
+    if (!transcriptData.results || !transcriptData.results.transcripts || !transcriptData.results.transcripts.length) {
+      throw new Error('No transcripts found in the S3 object.');
+    }
+
+    const transcript = transcriptData.results.transcripts[0].transcript;
     console.log('transcript', JSON.stringify(transcript));
+
     return transcript;
   } catch (e: any) {
-    console.error('Error getting transcript file, potentially file doesnt exist');
+    console.error('Error getting transcript file, potentially file does not exist');
     console.error(e.toString());
     return '';
   }
 }
+
 async function callAppSyncEndpoint(input: CreateTranslationRecordingsInput|UpdateTranslationRecordingsInput, query: string) {
   console.log(`Calling AppSync Endpoint: ${JSON.stringify(input)}`);
   const options = {
@@ -162,6 +171,12 @@ export const handler = async (input: GetTranscribeStatusOutput) => {
   const escapedKey = input.key.replace(/ /g, '_');
 
   const transcript = await getTranscriptFile(input.bucket, escapedKey);
+
+  if (!transcript || transcript.trim() === '') {
+    console.error('Transcript is empty, cannot translate.');
+    return {};
+  }
+
   let dynamoRow: CreateTranslationRecordingsInput = {
     jobId: input.jobId,
     bucket: input.bucket,
