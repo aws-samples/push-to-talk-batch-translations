@@ -9,7 +9,7 @@ import { AuthorizationType } from '@aws-cdk/aws-appsync-alpha/lib/graphqlapi';
 import { App, CfnOutput, Duration, Expiration, Stack, StackProps } from 'aws-cdk-lib';
 import { AllowedMethods, Distribution, HttpVersion, PriceClass, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
-import { CfnIdentityPool, CfnIdentityPoolRoleAttachment } from 'aws-cdk-lib/aws-cognito';
+import { CfnIdentityPool, CfnIdentityPoolRoleAttachment, UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, FederatedPrincipal, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -19,7 +19,9 @@ import { Choice, Condition, Fail, StateMachine } from 'aws-cdk-lib/aws-stepfunct
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
 import * as dotenv from 'dotenv';
+
 dotenv.config();
+
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
@@ -163,6 +165,9 @@ export class MyStack extends Stack {
           externalModules: ['aws-sdk'],
         },
         depsLockFilePath: './yarn.lock',
+        environment: {
+          REGION: this.region || 'us-east-1',
+        },
       });
 
     const getTranscribeStatusLambda = new NodejsFunction(this,
@@ -175,6 +180,9 @@ export class MyStack extends Stack {
         memorySize: 128,
         timeout: Duration.seconds(30),
         depsLockFilePath: './yarn.lock',
+        environment: {
+          REGION: this.region || 'us-east-1',
+        },
       });
 
     const translatePollyLambda = new NodejsFunction(this,
@@ -190,7 +198,7 @@ export class MyStack extends Stack {
         environment: {
           API_GRAPHQLAPIENDPOINT: process.env.API_GRAPHQLAPIENDPOINT || '',
           API_GRAPHQLAPIKEY: process.env.API_GRAPHQLAPIKEY || '',
-          REGION: props.env?.region || 'us-east-1',
+          REGION: this.region || 'us-east-1',
         },
       });
 
@@ -269,7 +277,7 @@ export class MyStack extends Stack {
         },
         environment: {
           STATE_MACHINE_ARN: primaryStepFunction.stateMachineArn,
-          REGION: props.env?.region || 'us-east-1',
+          REGION: this.region || 'us-east-1',
         },
       });
 
@@ -371,13 +379,40 @@ export class MyStack extends Stack {
       },
     );
 
-    // Cognito Identity Pool
+    // Create a User Pool
+    const userPool = new UserPool(this, 'VoicetranslatorUserPool', {
+      selfSignUpEnabled: true, // Allow users to sign up
+      signInAliases: {
+        email: true, // Allow email as a sign-in alias
+      },
+    });
+
+    // Create a User Pool Client
+    const userPoolClient = new UserPoolClient(this, 'VoicetranslatorPoolClient', {
+      userPool,
+      generateSecret: false, // Set to true if you want a secret
+    });
+
+    // Update the existing Identity Pool to allow authenticated users from the User Pool
     const identityPool = new CfnIdentityPool(this, 'CognitoIdentityPool', {
       allowUnauthenticatedIdentities: true,
+      cognitoIdentityProviders: [
+        {
+          clientId: userPoolClient.userPoolClientId,
+          providerName: userPool.userPoolProviderName,
+        },
+      ],
     });
 
     const unAuthRole = new Role(this, 'CognitoUnAuthorizedRole', {
-      assumedBy: new FederatedPrincipal('cognito-identity.amazonaws.com', {}, 'sts:AssumeRoleWithWebIdentity'),
+      assumedBy: new FederatedPrincipal('cognito-identity.amazonaws.com', {
+        'StringEquals': {
+          'cognito-identity.amazonaws.com:aud': identityPool.ref,
+        },
+        'ForAnyValue:StringEquals': {
+          'cognito-identity.amazonaws.com:amr': 'unauthenticated',
+        },
+      }, 'sts:AssumeRoleWithWebIdentity'),
       inlinePolicies: {
         CognitoUnauthorizedPolicy: new PolicyDocument({
           statements: [
@@ -387,9 +422,14 @@ export class MyStack extends Stack {
               resources: [transcribeLambda.functionArn],
             }),
             new PolicyStatement({
-              actions: ['s3:PutObject'],
+              actions: ['s3:PutObject', 's3:GetObject'],
               effect: Effect.ALLOW,
               resources: [`${voiceTranslatorBucket.bucketArn}/*`],
+            }),
+            new PolicyStatement({
+              actions: ['appsync:GraphQL'],
+              effect: Effect.ALLOW,
+              resources: [appSync2LiveTranslationApi.arn],
             }),
           ],
         }),
@@ -397,11 +437,47 @@ export class MyStack extends Stack {
     });
 
 
+    // Create roles for authenticated and unauthenticated users
+    const authRole = new Role(this, 'CognitoAuthorizedRole', {
+      assumedBy: new FederatedPrincipal('cognito-identity.amazonaws.com', {
+        'StringEquals': {
+          'cognito-identity.amazonaws.com:aud': identityPool.ref,
+        },
+        'ForAnyValue:StringEquals': {
+          'cognito-identity.amazonaws.com:amr': 'authenticated',
+        },
+      }, 'sts:AssumeRoleWithWebIdentity'),
+      inlinePolicies: {
+        AuthPolicy: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['lambda:InvokeFunction'],
+              effect: Effect.ALLOW,
+              resources: [transcribeLambda.functionArn],
+            }),
+            new PolicyStatement({
+              actions: ['s3:PutObject', 's3:GetObject'],
+              effect: Effect.ALLOW,
+              resources: [`${voiceTranslatorBucket.bucketArn}/*`],
+            }),
+            new PolicyStatement({
+              actions: ['appsync:GraphQL'],
+              effect: Effect.ALLOW,
+              resources: [appSync2LiveTranslationApi.arn],
+            }),
+          ],
+        }),
+      },
+    });
+
+    translationRecordingTable.grantReadWriteData(translatePollyLambda);
+
     // Identity Pool Role Mapping
     new CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleMapping', {
       identityPoolId: identityPool.ref,
       roles: {
         unauthenticated: unAuthRole.roleArn,
+        authenticated: authRole.roleArn,
       },
     });
 
@@ -430,7 +506,7 @@ export class MyStack extends Stack {
       value: startTranslationSfnLambda.functionArn,
     });
 
-    new CfnOutput(this, 'graphql endpoint', {
+    new CfnOutput(this, 'graphqEndpoint', {
       description: 'graphql endpoint',
       value: process.env.API_GRAPHQLAPIENDPOINT || '',
     });
